@@ -1,0 +1,30 @@
+{
+  "name": "salesforce-agentforce-a2a-wrapper",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file=./src/.env --watch src/index.ts",
+    "start": "node --env-file=./src/.env src/index.ts"
+  },
+  "keywords": [
+    "agentforce",
+    "salesforce",
+    "data cloud",
+    "data360",
+    "heroku",
+    "AppLink"
+  ],
+  "author": "Matija Vrzan",
+  "license": "ISC",
+  "description": "An example implementation of a financial AI Agent built with Agentforce and made accessible through the A2A protocol. The Heroku backend provides A2A protocol support, and the agent uses Heroku AppLink to perform API invocations.",
+  "dependencies": {
+    "body-parser": "^2.2.1",
+    "cors": "^2.8.5",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6"
+  }
+}
