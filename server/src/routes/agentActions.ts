@@ -2,6 +2,7 @@ import { Router } from "express";
 import initSalesforceSdk from "../middleware/herokuServiceMesh.ts";
 import { getCurrentTimestamp } from "../utils/loggingUtil.ts";
 import getStockPrice from "../controllers/getStockPrice.ts";
+import getCompanyProfile from "../controllers/getCompanyProfile.ts";
 
 const agentActionRoutes = Router();
 
@@ -18,10 +19,10 @@ const initHerokuMiddleware = async () => {
     );
 
     agentActionRoutes.get(
-      "/api/v1/stocks/:symbol/ytd",
+      "/api/v1/profile/:symbol",
       withSalesforceConfig({ parseRequest: true }),
       salesforceMiddleware,
-      () => {}
+      getCompanyProfile
     );
 
     console.log(`${getCurrentTimestamp()} ✅ Agent Action routes registered successfully!`);
