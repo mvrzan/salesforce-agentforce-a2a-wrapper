@@ -20,7 +20,10 @@ const initSalesforceSdk = async () => {
         req.sdk = Object.assign(req.sdk, parsedRequest);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error(`${getCurrentTimestamp()} ❌ Salesforce authentication error:`, errorMessage);
+        console.error(
+          `${getCurrentTimestamp()} ❌ - herokuServiceMesh  Salesforce authentication error:`,
+          errorMessage
+        );
 
         return res.status(401).json({
           error: "Invalid request",
@@ -40,7 +43,7 @@ const initSalesforceSdk = async () => {
 
   const asyncMiddleware = (handler: AsyncHandler) => {
     return async (req: Request, res: Response, next: NextFunction) => {
-      console.log(`${getCurrentTimestamp()} 🔄 Async response for ${req.method} ${req.path}`);
+      console.log(`${getCurrentTimestamp()} 🔄 - herokuServiceMesh  Async response for ${req.method} ${req.path}`);
 
       const routeKey = `${req.method} ${req.path}`;
       customAsyncHandlers[routeKey] = handler;
@@ -54,7 +57,10 @@ const initSalesforceSdk = async () => {
         req.sdk.asyncComplete = true;
         console.log(`${getCurrentTimestamp()} 🔄 Async ${routeKey} completed!`);
       } catch (error) {
-        console.error(`${getCurrentTimestamp()} ❌ Error in async handler for ${routeKey}:`, error);
+        console.error(
+          `${getCurrentTimestamp()} ❌ - herokuServiceMesh  Error in async handler for ${routeKey}:`,
+          error
+        );
       }
       next();
     };
