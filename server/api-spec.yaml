@@ -1,0 +1,243 @@
+openapi: 3.0.3
+info:
+  title: Salesforce Agentforce A2A Wrapper API
+  description: |
+    An example implementation of a financial AI Agent built with Agentforce and made accessible through the A2A protocol.
+    The Heroku backend provides A2A protocol support, and the agent uses Heroku AppLink to perform API invocations.
+  version: 1.0.0
+
+paths:
+  /api/v1/stocks/{symbol}:
+    get:
+      tags:
+        - Stocks
+      summary: Get stock price information
+      description: Retrieves current stock price and trading data for a given stock symbol
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: "A2AConnectedApp"
+      operationId: getStockPrice
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          description: Stock ticker symbol (e.g., AAPL, TSLA, MSFT)
+          schema:
+            type: string
+            example: AAPL
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      symbol:
+                        type: string
+                        example: AAPL
+                      price:
+                        type: number
+                        format: double
+                        description: Current stock price
+                        example: 175.43
+                      metadata:
+                        type: object
+                        properties:
+                          high:
+                            type: number
+                            format: double
+                            description: Day's high price
+                            example: 176.89
+                          low:
+                            type: number
+                            format: double
+                            description: Day's low price
+                            example: 174.22
+                          open:
+                            type: number
+                            format: double
+                            description: Opening price
+                            example: 175.10
+                          previousClose:
+                            type: number
+                            format: double
+                            description: Previous closing price
+                            example: 174.85
+                          change:
+                            type: number
+                            format: double
+                            description: Price change
+                            example: 0.58
+                          changePercent:
+                            type: number
+                            format: double
+                            description: Percentage change
+                            example: 0.33
+                          timestamp:
+                            type: integer
+                            format: int64
+                            description: Unix timestamp
+                            example: 1702324800
+        "400":
+          description: Bad request - Invalid or missing stock symbol
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                error: Stock symbol is required
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseWithMessage"
+              example:
+                success: false
+                error: Failed to fetch stock price
+                message: There was an error while fetching stock information
+
+  /api/v1/profile/{symbol}:
+    get:
+      tags:
+        - Stocks
+      summary: Get company profile
+      description: Retrieves detailed company information for a given stock symbol
+      x-sfdc:
+        heroku:
+          authorization:
+            connectedApp: "A2AConnectedApp"
+      operationId: getCompanyProfile
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          description: Stock ticker symbol (e.g., AAPL, TSLA, MSFT)
+          schema:
+            type: string
+            example: AAPL
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      symbol:
+                        type: string
+                        example: AAPL
+                      name:
+                        type: string
+                        description: Company name
+                        example: Apple Inc
+                      country:
+                        type: string
+                        description: Country of incorporation
+                        example: US
+                      currency:
+                        type: string
+                        description: Trading currency
+                        example: USD
+                      exchange:
+                        type: string
+                        description: Exchange where stock is traded
+                        example: NASDAQ
+                      industry:
+                        type: string
+                        description: Company industry classification
+                        example: Technology
+                      ipo:
+                        type: string
+                        description: IPO date
+                        example: "1980-12-12"
+                      marketCapitalization:
+                        type: number
+                        format: double
+                        description: Market capitalization in millions
+                        example: 2800000
+                      sharesOutstanding:
+                        type: number
+                        format: double
+                        description: Number of shares outstanding
+                        example: 15550061
+                      logo:
+                        type: string
+                        format: uri
+                        description: URL to company logo
+                        example: https://static.finnhub.io/logo/87cb30d8-80df-11ea-8951-00000000092a.png
+                      phone:
+                        type: string
+                        description: Company phone number
+                        example: "14089961010"
+                      weburl:
+                        type: string
+                        format: uri
+                        description: Company website URL
+                        example: https://www.apple.com/
+        "400":
+          description: Bad request - Invalid or missing stock symbol
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                error: Stock symbol is required
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponseWithMessage"
+              example:
+                success: false
+                error: Failed to fetch company information
+                message: There was an error while fetching company information
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Invalid request
+
+    ErrorResponseWithMessage:
+      type: object
+      required:
+        - success
+        - error
+        - message
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Operation failed
+        message:
+          type: string
+          example: Detailed error message
