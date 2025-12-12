@@ -11,14 +11,14 @@ const initHerokuMiddleware = async () => {
     const { salesforceMiddleware, withSalesforceConfig } = await initSalesforceSdk();
 
     agentActionRoutes.get(
-      "/api/v1/get-symbol",
+      "/api/v1/stocks/:symbol",
       withSalesforceConfig({ parseRequest: true }),
       salesforceMiddleware,
       getStockPrice
     );
 
     agentActionRoutes.get(
-      "/api/v1/get-ytd",
+      "/api/v1/stocks/:symbol/ytd",
       withSalesforceConfig({ parseRequest: true }),
       salesforceMiddleware,
       () => {}
