@@ -1,6 +1,7 @@
 import express, { type Request, type Response } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
+import agentActionRoutes from "./routes/agentActions.ts";
 import { getCurrentTimestamp } from "./utils/loggingUtil.ts";
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(agentActionRoutes);
 app.use(express.static("public"));
 
 app.get("/test", (req: Request, res: Response) => {
