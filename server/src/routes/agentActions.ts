@@ -1,6 +1,7 @@
 import { Router } from "express";
 import initSalesforceSdk from "../middleware/herokuServiceMesh.ts";
 import { getCurrentTimestamp } from "../utils/loggingUtil.ts";
+import getStockPrice from "../controllers/getStockPrice.ts";
 
 const agentActionRoutes = Router();
 
@@ -13,7 +14,7 @@ const initHerokuMiddleware = async () => {
       "/api/v1/get-symbol",
       withSalesforceConfig({ parseRequest: true }),
       salesforceMiddleware,
-      () => {}
+      getStockPrice
     );
 
     agentActionRoutes.get(
