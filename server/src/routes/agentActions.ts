@@ -1,0 +1,35 @@
+import { Router } from "express";
+import initSalesforceSdk from "../middleware/herokuServiceMesh.ts";
+import { getCurrentTimestamp } from "../utils/loggingUtil.ts";
+
+const agentActionRoutes = Router();
+
+const initHerokuMiddleware = async () => {
+  try {
+    console.log(`${getCurrentTimestamp()} 🔧 - Initializing Agent Action routes...`);
+    const { salesforceMiddleware, withSalesforceConfig } = await initSalesforceSdk();
+
+    agentActionRoutes.get(
+      "/api/v1/get-symbol",
+      withSalesforceConfig({ parseRequest: true }),
+      salesforceMiddleware,
+      () => {}
+    );
+
+    agentActionRoutes.get(
+      "/api/v1/get-ytd",
+      withSalesforceConfig({ parseRequest: true }),
+      salesforceMiddleware,
+      () => {}
+    );
+
+    console.log(`${getCurrentTimestamp()} ✅ Agent Action routes registered successfully!`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`${getCurrentTimestamp()} ❌ Failed to initialize Agent Action routes: ${message}`);
+  }
+};
+
+await initHerokuMiddleware();
+
+export default agentActionRoutes;
