@@ -39,13 +39,13 @@ const getStockPrice = async (req: Request, res: Response) => {
       },
     };
 
-    const finhubResponse = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol.toUpperCase()}`, config);
+    const finnhubResponse = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol.toUpperCase()}`, config);
 
-    if (!finhubResponse.ok) {
-      throw new Error(`There was an error while fetching stock information: ${finhubResponse.statusText}`);
+    if (!finnhubResponse.ok) {
+      throw new Error(`There was an error while fetching stock information: ${finnhubResponse.statusText}`);
     }
 
-    const data: StockPriceResponse = await finhubResponse.json();
+    const data: StockPriceResponse = await finnhubResponse.json();
 
     const stockPrice = data.c;
 
