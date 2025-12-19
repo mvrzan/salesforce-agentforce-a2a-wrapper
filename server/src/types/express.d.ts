@@ -1,9 +1,7 @@
-import { SalesforceSDK } from "@heroku/applink";
-
 declare global {
   namespace Express {
     interface Request {
-      sdk: SalesforceSDK;
+      sdk: any;
       log?: any;
     }
 
