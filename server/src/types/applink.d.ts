@@ -1,4 +1,10 @@
 declare module "@heroku/applink" {
+  export interface Authorization {
+    access_token: string;
+    instance_url: string;
+    [key: string]: any;
+  }
+
   export interface SalesforceSDK {
     salesforce: {
       parseRequest: (headers: any, body: any, logger: any) => any;
@@ -7,11 +13,18 @@ declare module "@heroku/applink" {
     [key: string]: any;
   }
 
-  export function init(): SalesforceSDK;
+  export interface ApplinkInstance {
+    getAuthorization(name: string): Promise<Authorization>;
+    [key: string]: any;
+  }
 
-  const salesforceSdk: {
-    init: typeof init;
-  };
+  interface ApplinkConstructor {
+    new (): ApplinkInstance;
+    init(): SalesforceSDK;
+    [key: string]: any;
+  }
 
-  export default salesforceSdk;
+  const Applink: ApplinkConstructor;
+
+  export default Applink;
 }
