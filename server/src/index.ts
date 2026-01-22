@@ -2,6 +2,7 @@ import express, { type Request, type Response } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import agentActionRoutes from "./routes/agentActions.ts";
+import agentforceApiRoutes from "./routes/agentforceApi.ts";
 import { getCurrentTimestamp } from "./utils/loggingUtil.ts";
 
 const app = express();
@@ -11,12 +12,13 @@ app.use(
   cors({
     origin: "http://localhost:5173",
     credentials: true,
-  })
+  }),
 );
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(agentActionRoutes);
+app.use(agentforceApiRoutes);
 app.use(express.static("public"));
 
 app.get("/test", (req: Request, res: Response) => {
