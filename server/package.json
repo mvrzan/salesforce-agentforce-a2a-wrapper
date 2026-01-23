@@ -19,6 +19,7 @@
   "license": "ISC",
   "description": "An example implementation of a financial AI Agent built with Agentforce and made accessible through the A2A protocol. The Heroku backend provides A2A protocol support, and the agent uses Heroku AppLink to perform API invocations.",
   "dependencies": {
+    "@a2a-js/sdk": "^0.3.9",
     "@heroku/applink": "^1.0.0",
     "body-parser": "^2.2.1",
     "cors": "^2.8.5",
