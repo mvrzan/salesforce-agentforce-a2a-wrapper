@@ -46,7 +46,6 @@ const agentforceAgent: AgentCard = {
   additionalInterfaces: [
     { url: `${baseUrl}/a2a/jsonrpc`, transport: "JSONRPC" }, // Default JSON-RPC transport
     { url: `${baseUrl}/a2a/rest`, transport: "HTTP+JSON" }, // HTTP+JSON/REST transport
-    { url: `${baseUrl.replace(/^https?:\/\//, "")}:4001`, transport: "GRPC" }, // GRPC transport
   ],
 };
 
