@@ -15,17 +15,17 @@ const initHerokuMiddleware = async () => {
       "/api/v1/stocks/:symbol",
       withSalesforceConfig({ parseRequest: true }),
       salesforceMiddleware,
-      getStockPrice
+      getStockPrice,
     );
 
     agentActionRoutes.get(
       "/api/v1/profile/:symbol",
       withSalesforceConfig({ parseRequest: true }),
       salesforceMiddleware,
-      getCompanyProfile
+      getCompanyProfile,
     );
 
-    console.log(`${getCurrentTimestamp()} ✅ Agent Action routes registered successfully!`);
+    console.log(`${getCurrentTimestamp()} ✅ - Agent Action routes registered successfully!`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`${getCurrentTimestamp()} ❌ Failed to initialize Agent Action routes: ${message}`);
