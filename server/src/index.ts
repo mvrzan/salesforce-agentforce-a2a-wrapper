@@ -2,14 +2,10 @@ import express, { type Request, type Response } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import { v4 as uuidv4 } from "uuid";
-import { AgentCard, Message, AGENT_CARD_PATH } from "@a2a-js/sdk";
-import {
-  AgentExecutor,
-  RequestContext,
-  ExecutionEventBus,
-  DefaultRequestHandler,
-  InMemoryTaskStore,
-} from "@a2a-js/sdk/server";
+import { AGENT_CARD_PATH } from "@a2a-js/sdk";
+import type { AgentCard, Message } from "@a2a-js/sdk";
+import type { AgentExecutor, RequestContext, ExecutionEventBus } from "@a2a-js/sdk/server";
+import { DefaultRequestHandler, InMemoryTaskStore } from "@a2a-js/sdk/server";
 import { agentCardHandler, jsonRpcHandler, restHandler, UserBuilder } from "@a2a-js/sdk/server/express";
 import agentActionRoutes from "./routes/agentActions.ts";
 import agentforceApiRoutes from "./routes/agentforceApi.ts";
