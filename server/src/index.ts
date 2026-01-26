@@ -217,14 +217,6 @@ app.use(agentActionRoutes);
 app.use(agentforceApiRoutes);
 app.use(express.static("public"));
 
-app.get("/test", (req: Request, res: Response) => {
-  console.log("Calling your endpoint!");
-
-  res.status(200).json({
-    message: "It works!",
-  });
-});
-
 app.listen(port, () => {
   console.log(`${getCurrentTimestamp()} - 🎬 index - Authentication server listening on port: ${port}`);
 });
