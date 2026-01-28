@@ -110,7 +110,7 @@ export class FinancialAgentExecutor implements AgentExecutor {
           }
 
           buffer += decoder.decode(value, { stream: true });
-          
+
           // Parse SSE events
           const lines = buffer.split("\n");
           buffer = lines.pop() || ""; // Keep incomplete line in buffer
