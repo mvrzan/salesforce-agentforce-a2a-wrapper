@@ -94,10 +94,11 @@ export class FinancialAgentExecutor implements AgentExecutor {
         throw new Error("Response body is null");
       }
 
-      // Read the streaming response
+      // Read the streaming response and parse SSE events
       const reader = sendMessageResponse.body.getReader();
       const decoder = new TextDecoder();
       let agentforceText = "";
+      let buffer = "";
 
       try {
         while (true) {
@@ -108,8 +109,25 @@ export class FinancialAgentExecutor implements AgentExecutor {
             break;
           }
 
-          const chunk = decoder.decode(value, { stream: true });
-          agentforceText += chunk;
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Parse SSE events
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              try {
+                const jsonData = JSON.parse(line.substring(6));
+                // Extract text from Agentforce SSE format
+                if (jsonData.message?.type === "TextChunk" && jsonData.message?.message) {
+                  agentforceText += jsonData.message.message;
+                }
+              } catch (parseError) {
+                console.warn(`${getCurrentTimestamp()} ⚠️ - Failed to parse SSE data:`, line);
+              }
+            }
+          }
         }
       } catch (streamError) {
         const errorMessage = streamError instanceof Error ? streamError.message : String(streamError);
