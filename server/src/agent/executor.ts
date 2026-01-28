@@ -61,7 +61,7 @@ export class FinancialAgentExecutor implements AgentExecutor {
 
       console.log(`${getCurrentTimestamp()} ✅ - FinancialAgentExecutor - Session started: ${sessionId}`);
 
-      // Step 2: Send message to Agentforce (non-streaming for simplicity)
+      // Step 2: Send message to Agentforce (streaming)
       console.log(`${getCurrentTimestamp()} 📤 - FinancialAgentExecutor - Sending message to Agentforce...`);
 
       const sendMessageBody = {
@@ -73,11 +73,12 @@ export class FinancialAgentExecutor implements AgentExecutor {
       };
 
       const sendMessageResponse = await fetch(
-        `https://api.salesforce.com/einstein/ai-agent/v1/sessions/${sessionId}/messages`,
+        `https://api.salesforce.com/einstein/ai-agent/v1/sessions/${sessionId}/messages/stream`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Accept: "text/event-stream",
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify(sendMessageBody),
@@ -89,16 +90,33 @@ export class FinancialAgentExecutor implements AgentExecutor {
         throw new Error(`Failed to send message to Agentforce: ${sendMessageResponse.statusText} - ${errorText}`);
       }
 
-      const messageData = await sendMessageResponse.json();
+      if (!sendMessageResponse.body) {
+        throw new Error("Response body is null");
+      }
+
+      // Read the streaming response
+      const reader = sendMessageResponse.body.getReader();
+      const decoder = new TextDecoder();
+      let agentforceText = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            console.log(`${getCurrentTimestamp()} 📥 - FinancialAgentExecutor - Stream complete`);
+            break;
+          }
+
+          const chunk = decoder.decode(value, { stream: true });
+          agentforceText += chunk;
+        }
+      } catch (streamError) {
+        const errorMessage = streamError instanceof Error ? streamError.message : String(streamError);
+        throw new Error(`Stream error: ${errorMessage}`);
+      }
 
       console.log(`${getCurrentTimestamp()} 📥 - FinancialAgentExecutor - Received response from Agentforce`);
-
-      // Extract text from Agentforce response
-      const agentforceText =
-        messageData.messages
-          ?.filter((msg: any) => msg.role === "Agent")
-          ?.map((msg: any) => msg.message?.text || "")
-          ?.join(" ") || "No response from Agentforce";
 
       // Step 3: Delete the session
       console.log(`${getCurrentTimestamp()} 🗑️ - FinancialAgentExecutor - Deleting Agentforce session...`);
