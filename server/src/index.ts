@@ -4,7 +4,7 @@ import cors from "cors";
 import agentActionRoutes from "./routes/agentActions.ts";
 import agentforceApiRoutes from "./routes/agentforceApi.ts";
 import { getCurrentTimestamp } from "./utils/loggingUtil.ts";
-import { setupAgentRoutes } from "./agent/routes.ts";
+import { setupAgentRoutes } from "./routes/a2aRoutes.ts";
 
 const app = express();
 const port = process.env.APP_PORT || process.env.PORT || 3000;
