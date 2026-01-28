@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import type { Message } from "@a2a-js/sdk";
+import type { Message, Task, TaskStatus, Artifact, TaskArtifactUpdateEvent } from "@a2a-js/sdk";
 import type { AgentExecutor, RequestContext, ExecutionEventBus } from "@a2a-js/sdk/server";
 import { getCurrentTimestamp } from "../utils/loggingUtil.ts";
 import salesforceSdk from "@heroku/applink";
@@ -21,6 +21,32 @@ export class FinancialAgentExecutor implements AgentExecutor {
       const accessToken = auth.accessToken;
       const instanceUrl = auth.domainUrl;
       const agentId = process.env.AGENTFORCE_AGENT_ID;
+
+      const { taskId, contextId, userMessage: reqUserMsg, task } = requestContext;
+
+      // Create initial task if it doesn't exist (following official streaming example)
+      if (!task) {
+        const initialTask: Task = {
+          kind: "task",
+          id: taskId,
+          contextId: contextId,
+          status: {
+            state: "submitted",
+            timestamp: new Date().toISOString(),
+          },
+          history: [userMessage],
+        };
+        eventBus.publish(initialTask);
+      }
+
+      // Publish 'working' state
+      eventBus.publish({
+        kind: "status-update",
+        taskId,
+        contextId,
+        status: { state: "working", timestamp: new Date().toISOString() } as TaskStatus,
+        final: false,
+      });
 
       // Generate a unique external session key
       const externalSessionKey = uuidv4();
@@ -94,11 +120,11 @@ export class FinancialAgentExecutor implements AgentExecutor {
         throw new Error("Response body is null");
       }
 
-      // Read the streaming response and parse SSE events
+      // Read the streaming response and publish artifact updates in real-time
       const reader = sendMessageResponse.body.getReader();
       const decoder = new TextDecoder();
-      let agentforceText = "";
       let buffer = "";
+      const artifactId = uuidv4();
 
       try {
         while (true) {
@@ -121,7 +147,25 @@ export class FinancialAgentExecutor implements AgentExecutor {
                 const jsonData = JSON.parse(line.substring(6));
                 // Extract text from Agentforce SSE format
                 if (jsonData.message?.type === "TextChunk" && jsonData.message?.message) {
-                  agentforceText += jsonData.message.message;
+                  const chunkText = jsonData.message.message;
+                  console.log(`${getCurrentTimestamp()} 📤 Publishing chunk: "${chunkText}"`);
+
+                  // Publish artifact update immediately (streaming pattern from official example)
+                  const artifactUpdate: TaskArtifactUpdateEvent = {
+                    kind: "artifact-update",
+                    taskId,
+                    contextId,
+                    artifact: {
+                      artifactId,
+                      name: "response.txt",
+                      parts: [{ kind: "text", text: chunkText }],
+                    },
+                    append: true, // Key: append each chunk to the artifact
+                  };
+                  eventBus.publish(artifactUpdate);
+
+                  // Yield to event loop to allow transport to flush events
+                  await new Promise((resolve) => setImmediate(resolve));
                 }
               } catch (parseError) {
                 console.warn(`${getCurrentTimestamp()} ⚠️ - Failed to parse SSE data:`, line);
@@ -134,7 +178,16 @@ export class FinancialAgentExecutor implements AgentExecutor {
         throw new Error(`Stream error: ${errorMessage}`);
       }
 
-      console.log(`${getCurrentTimestamp()} 📥 - FinancialAgentExecutor - Received response from Agentforce`);
+      console.log(`${getCurrentTimestamp()} 📥 - FinancialAgentExecutor - All chunks published`);
+
+      // Publish final 'completed' state
+      eventBus.publish({
+        kind: "status-update",
+        taskId,
+        contextId,
+        status: { state: "completed", timestamp: new Date().toISOString() } as TaskStatus,
+        final: true,
+      });
 
       // Step 3: Delete the session
       console.log(`${getCurrentTimestamp()} 🗑️ - FinancialAgentExecutor - Deleting Agentforce session...`);
@@ -150,17 +203,7 @@ export class FinancialAgentExecutor implements AgentExecutor {
 
       console.log(`${getCurrentTimestamp()} ✅ - FinancialAgentExecutor - Session deleted`);
 
-      // Create A2A response message
-      const responseMessage: Message = {
-        kind: "message",
-        messageId: uuidv4(),
-        role: "agent",
-        parts: [{ kind: "text", text: agentforceText }],
-        contextId: requestContext.contextId,
-      };
-
-      // Publish the message and signal that the interaction is finished
-      eventBus.publish(responseMessage);
+      // Signal that the interaction is finished
       eventBus.finished();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
