@@ -50,41 +50,36 @@ function App() {
     setIsSending(true);
     setError("");
 
-    // Create a placeholder agent message for streaming
-    const agentMessageId = crypto.randomUUID();
-    const agentMessage: Message = {
-      id: agentMessageId,
+    // Create placeholder message for streaming chunks
+    const placeholderMessageId = crypto.randomUUID();
+    const placeholderMessage: Message = {
+      id: placeholderMessageId,
       role: "agent",
       text: "",
       timestamp: new Date(),
     };
-
-    setMessages((prev) => [...prev, agentMessage]);
+    setMessages((prev) => [...prev, placeholderMessage]);
 
     try {
-      await client.sendMessage(text, contextId, (chunk: string) => {
-        console.log(`🔄 Updating UI with chunk: "${chunk}"`);
-        // Update the agent message with each chunk
-        setMessages((prev) => {
-          const updated = prev.map((msg) => {
-            if (msg.id === agentMessageId) {
-              const newText = msg.text + chunk;
-              console.log(`✅ Updated message text to: "${newText}"`);
-              return { ...msg, text: newText };
-            }
-            return msg;
-          });
-          return updated;
-        });
-      });
+      // Stream response from agent with real-time updates
+      await client.sendMessage(
+        text,
+        (chunk: string) => {
+          // Update the placeholder message with each chunk
+          setMessages((prev) =>
+            prev.map((msg) => (msg.id === placeholderMessageId ? { ...msg, text: msg.text + chunk } : msg)),
+          );
+        },
+        contextId,
+      );
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to send message";
       setError(errorMessage);
       console.error("Send message error:", err);
 
-      // Update the placeholder message with error
+      // Replace placeholder with error message
       setMessages((prev) =>
-        prev.map((msg) => (msg.id === agentMessageId ? { ...msg, text: `Error: ${errorMessage}` } : msg)),
+        prev.map((msg) => (msg.id === placeholderMessageId ? { ...msg, text: `Error: ${errorMessage}` } : msg)),
       );
     } finally {
       setIsSending(false);
@@ -143,7 +138,7 @@ function App() {
         {/* Architecture Diagram */}
         <div className="mt-12 bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Architecture Overview</h2>
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
+          <div className="bg-linear-to-r from-blue-50 to-purple-50 rounded-lg p-6">
             <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 text-center">
               <div className="bg-white rounded-lg p-4 shadow">
                 <div className="text-2xl mb-2">👤</div>
