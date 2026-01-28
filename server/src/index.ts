@@ -10,9 +10,6 @@ const app = express();
 const port = process.env.APP_PORT || process.env.PORT || 3000;
 const baseUrl = process.env.APP_URL || `http://localhost:${port}`;
 
-// Setup A2A agent routes
-setupAgentRoutes(app, baseUrl);
-
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -22,6 +19,8 @@ app.use(
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+setupAgentRoutes(app, baseUrl);
 app.use(agentActionRoutes);
 app.use(agentforceApiRoutes);
 app.use(express.static("public"));
