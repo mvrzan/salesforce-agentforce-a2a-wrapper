@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { AGENT_CARD_PATH } from "@a2a-js/sdk";
 import { DefaultRequestHandler, InMemoryTaskStore } from "@a2a-js/sdk/server";
 import { agentCardHandler, jsonRpcHandler, restHandler, UserBuilder } from "@a2a-js/sdk/server/express";
-import { createAgentCard } from "./card.ts";
-import { FinancialAgentExecutor } from "./executor.ts";
+import { createAgentCard } from "../agent/card.ts";
+import { FinancialAgentExecutor } from "../agent/executor.ts";
 import { getCurrentTimestamp } from "../utils/loggingUtil.ts";
 
 export function setupAgentRoutes(app: Express, baseUrl: string): void {
