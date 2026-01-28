@@ -29,6 +29,7 @@ export function createAgentCard(baseUrl: string): AgentCard {
       },
     ],
     capabilities: {
+      streaming: true,
       pushNotifications: false,
     },
     defaultInputModes: ["text"],
