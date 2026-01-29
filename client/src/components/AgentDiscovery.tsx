@@ -35,7 +35,7 @@ export default function AgentDiscovery({ onAgentDiscovered, isLoading }: AgentDi
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-start space-x-3 mb-4">
-        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
           <span className="text-xl">🔍</span>
         </div>
         <div className="flex-1">
