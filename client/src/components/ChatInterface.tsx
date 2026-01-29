@@ -43,11 +43,11 @@ export default function ChatInterface({ agentCard, onSendMessage, messages, isLo
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-md flex flex-col h-[600px]">
+    <div className="bg-white rounded-lg shadow-md flex flex-col h-150">
       {/* Header */}
       <div className="border-b border-gray-200 p-4">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
             <span className="text-xl">💬</span>
           </div>
           <div>
