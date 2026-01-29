@@ -87,39 +87,40 @@ export default function ChatInterface({ agentCard, onSendMessage, messages, isLo
                     message.role === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
                   }`}
                 >
-                  <div className="flex items-start space-x-2">
+                  <div className="flex items-center space-x-2">
                     <span className="text-lg">{message.role === "user" ? "👤" : "🤖"}</span>
                     <div className="flex-1">
-                      <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                      <span className="text-xs opacity-70 mt-1 block">{message.timestamp.toLocaleTimeString()}</span>
+                      {message.role === "agent" && !message.text ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="flex space-x-1">
+                            <div
+                              className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                              style={{ animationDelay: "0ms" }}
+                            ></div>
+                            <div
+                              className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                              style={{ animationDelay: "150ms" }}
+                            ></div>
+                            <div
+                              className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                              style={{ animationDelay: "300ms" }}
+                            ></div>
+                          </div>
+                          <span className="text-sm text-gray-600 italic">Contacting Agentforce Agent...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                          <span className="text-xs opacity-70 mt-1 block">
+                            {message.timestamp.toLocaleTimeString()}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
             ))}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg px-4 py-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">🤖</span>
-                    <div className="flex space-x-1">
-                      <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0ms" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "150ms" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "300ms" }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
             <div ref={messagesEndRef} />
           </>
         )}
