@@ -4,9 +4,19 @@ import type { AgentExecutor, RequestContext, ExecutionEventBus } from "@a2a-js/s
 import { getCurrentTimestamp } from "../utils/loggingUtil.ts";
 import salesforceSdk from "@heroku/applink";
 
+interface SessionCache {
+  sessionId: string;
+  externalSessionKey: string;
+  lastUsed: number;
+}
+
 export class FinancialAgentExecutor implements AgentExecutor {
+  private sessionCache: Map<string, SessionCache> = new Map();
+  private readonly SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
   async execute(requestContext: RequestContext, eventBus: ExecutionEventBus): Promise<void> {
     let sessionId: string | null = null;
+    let isNewSession = false;
 
     try {
       // Extract the user's message from the request context
@@ -23,6 +33,24 @@ export class FinancialAgentExecutor implements AgentExecutor {
       const agentId = process.env.AGENTFORCE_AGENT_ID;
 
       const { taskId, contextId, userMessage: reqUserMsg, task } = requestContext;
+
+      // Clean up expired sessions
+      this.cleanupExpiredSessions();
+
+      // Check if we have a cached session for this context
+      let externalSessionKey: string;
+      const cachedSession = this.sessionCache.get(contextId);
+
+      if (cachedSession) {
+        sessionId = cachedSession.sessionId;
+        externalSessionKey = cachedSession.externalSessionKey;
+        cachedSession.lastUsed = Date.now();
+        console.log(`${getCurrentTimestamp()} ♻️ - FinancialAgentExecutor - Reusing session: ${sessionId}`);
+      } else {
+        // Generate a unique external session key for new session
+        externalSessionKey = uuidv4();
+        isNewSession = true;
+      }
 
       // Create initial task if it doesn't exist (following official streaming example)
       if (!task) {
@@ -48,44 +76,54 @@ export class FinancialAgentExecutor implements AgentExecutor {
         final: false,
       });
 
-      // Generate a unique external session key
-      const externalSessionKey = uuidv4();
+      // Step 1: Start Agentforce session (only if we don't have a cached session)
+      if (isNewSession) {
+        console.log(`${getCurrentTimestamp()} 🚀 - FinancialAgentExecutor - Starting new Agentforce session...`);
 
-      // Step 1: Start Agentforce session
-      console.log(`${getCurrentTimestamp()} 🚀 - FinancialAgentExecutor - Starting Agentforce session...`);
-
-      const startSessionBody = {
-        externalSessionKey,
-        instanceConfig: {
-          endpoint: instanceUrl,
-        },
-        streamingCapabilities: {
-          chunkTypes: ["Text"],
-        },
-        bypassUser: true,
-      };
-
-      const startSessionResponse = await fetch(
-        `https://api.salesforce.com/einstein/ai-agent/v1/agents/${agentId}/sessions`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
+        const startSessionBody = {
+          externalSessionKey,
+          instanceConfig: {
+            endpoint: instanceUrl,
           },
-          body: JSON.stringify(startSessionBody),
-        },
-      );
+          streamingCapabilities: {
+            chunkTypes: ["Text"],
+          },
+          bypassUser: true,
+        };
 
-      if (!startSessionResponse.ok) {
-        const errorText = await startSessionResponse.text();
-        throw new Error(`Failed to start Agentforce session: ${startSessionResponse.statusText} - ${errorText}`);
+        const startSessionResponse = await fetch(
+          `https://api.salesforce.com/einstein/ai-agent/v1/agents/${agentId}/sessions`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(startSessionBody),
+          },
+        );
+
+        if (!startSessionResponse.ok) {
+          const errorText = await startSessionResponse.text();
+          throw new Error(`Failed to start Agentforce session: ${startSessionResponse.statusText} - ${errorText}`);
+        }
+
+        const sessionData = await startSessionResponse.json();
+        sessionId = sessionData.sessionId;
+
+        if (!sessionId) {
+          throw new Error("Failed to get session ID from Agentforce response");
+        }
+
+        // Cache the session
+        this.sessionCache.set(contextId, {
+          sessionId,
+          externalSessionKey,
+          lastUsed: Date.now(),
+        });
+
+        console.log(`${getCurrentTimestamp()} ✅ - FinancialAgentExecutor - Session started and cached: ${sessionId}`);
       }
-
-      const sessionData = await startSessionResponse.json();
-      sessionId = sessionData.sessionId;
-
-      console.log(`${getCurrentTimestamp()} ✅ - FinancialAgentExecutor - Session started: ${sessionId}`);
 
       // Step 2: Send message to Agentforce (streaming)
       console.log(`${getCurrentTimestamp()} 📤 - FinancialAgentExecutor - Sending message to Agentforce...`);
@@ -189,19 +227,8 @@ export class FinancialAgentExecutor implements AgentExecutor {
         final: true,
       });
 
-      // Step 3: Delete the session
-      console.log(`${getCurrentTimestamp()} 🗑️ - FinancialAgentExecutor - Deleting Agentforce session...`);
-
-      await fetch(`https://api.salesforce.com/einstein/ai-agent/v1/sessions/${sessionId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-          "x-session-end-reason": "UserRequest",
-        },
-      });
-
-      console.log(`${getCurrentTimestamp()} ✅ - FinancialAgentExecutor - Session deleted`);
+      // Don't delete the session - keep it cached for reuse
+      console.log(`${getCurrentTimestamp()} ✅ - FinancialAgentExecutor - Message complete, session kept alive`);
 
       // Signal that the interaction is finished
       eventBus.finished();
@@ -209,8 +236,10 @@ export class FinancialAgentExecutor implements AgentExecutor {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error(`${getCurrentTimestamp()} ❌ - FinancialAgentExecutor - Error:`, errorMessage);
 
-      // Attempt to clean up session if it was created
-      if (sessionId) {
+      // On error, remove the session from cache and delete it
+      if (sessionId && requestContext.contextId) {
+        this.sessionCache.delete(requestContext.contextId);
+
         try {
           const sdk = salesforceSdk.init();
           const auth = await sdk.addons.applink.getAuthorization("AFMatija");
@@ -238,6 +267,51 @@ export class FinancialAgentExecutor implements AgentExecutor {
 
       eventBus.publish(responseMessage);
       eventBus.finished();
+    }
+  }
+
+  private cleanupExpiredSessions(): void {
+    const now = Date.now();
+    const expiredContexts: string[] = [];
+
+    for (const [contextId, session] of this.sessionCache.entries()) {
+      if (now - session.lastUsed > this.SESSION_TTL_MS) {
+        expiredContexts.push(contextId);
+      }
+    }
+
+    if (expiredContexts.length > 0) {
+      console.log(`${getCurrentTimestamp()} 🧹 - Cleaning up ${expiredContexts.length} expired sessions`);
+
+      // Remove from cache and attempt to delete from Agentforce
+      for (const contextId of expiredContexts) {
+        const session = this.sessionCache.get(contextId);
+        this.sessionCache.delete(contextId);
+
+        if (session) {
+          // Fire and forget - don't await
+          this.deleteSession(session.sessionId).catch(() => {
+            // Ignore cleanup errors
+          });
+        }
+      }
+    }
+  }
+
+  private async deleteSession(sessionId: string): Promise<void> {
+    try {
+      const sdk = salesforceSdk.init();
+      const auth = await sdk.addons.applink.getAuthorization("AFMatija");
+      await fetch(`https://api.salesforce.com/einstein/ai-agent/v1/sessions/${sessionId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${auth.accessToken}`,
+          "x-session-end-reason": "Expired",
+        },
+      });
+    } catch (error) {
+      console.warn(`${getCurrentTimestamp()} ⚠️ - Failed to delete expired session ${sessionId}`);
     }
   }
 
