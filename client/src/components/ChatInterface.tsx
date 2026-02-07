@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import type { Message } from "../types/agent";
 import type { AgentCard } from "../types/agent";
 
@@ -7,9 +8,16 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string) => Promise<void>;
   messages: Message[];
   isLoading: boolean;
+  useOrchestrator?: boolean;
 }
 
-export default function ChatInterface({ agentCard, onSendMessage, messages, isLoading }: ChatInterfaceProps) {
+export default function ChatInterface({
+  agentCard,
+  onSendMessage,
+  messages,
+  isLoading,
+  useOrchestrator = false,
+}: ChatInterfaceProps) {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -41,6 +49,8 @@ export default function ChatInterface({ agentCard, onSendMessage, messages, isLo
     "Tell me about Salesforce company profile",
     "What is the stock price for AAPL?",
   ];
+
+  const loadingMessage = useOrchestrator ? "Thinking and consulting agents..." : "Contacting Agentforce Agent...";
 
   return (
     <div className="bg-white rounded-lg shadow-md flex flex-col h-150">
@@ -106,11 +116,32 @@ export default function ChatInterface({ agentCard, onSendMessage, messages, isLo
                               style={{ animationDelay: "300ms" }}
                             ></div>
                           </div>
-                          <span className="text-sm text-gray-600 italic">Contacting Agentforce Agent...</span>
+                          <span className="text-sm text-gray-600 italic">{loadingMessage}</span>
                         </div>
                       ) : (
                         <>
-                          <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                          <div className="text-sm prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-900 prose-strong:text-gray-900 prose-li:text-gray-900">
+                            <ReactMarkdown
+                              components={{
+                                // Style headers
+                                h1: ({ children }) => <h1 className="text-xl font-bold mb-2 mt-3">{children}</h1>,
+                                h2: ({ children }) => <h2 className="text-lg font-bold mb-2 mt-2">{children}</h2>,
+                                h3: ({ children }) => <h3 className="text-base font-bold mb-1 mt-2">{children}</h3>,
+                                // Style lists
+                                ul: ({ children }) => <ul className="list-disc pl-4 my-2 space-y-1">{children}</ul>,
+                                ol: ({ children }) => <ol className="list-decimal pl-4 my-2 space-y-1">{children}</ol>,
+                                li: ({ children }) => <li className="text-sm">{children}</li>,
+                                // Style paragraphs
+                                p: ({ children }) => <p className="my-1">{children}</p>,
+                                // Style code
+                                code: ({ children }) => (
+                                  <code className="bg-gray-200 px-1 py-0.5 rounded text-xs">{children}</code>
+                                ),
+                              }}
+                            >
+                              {message.text}
+                            </ReactMarkdown>
+                          </div>
                           <span className="text-xs opacity-70 mt-1 block">
                             {message.timestamp.toLocaleTimeString()}
                           </span>
