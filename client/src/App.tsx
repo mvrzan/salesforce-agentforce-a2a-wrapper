@@ -5,6 +5,7 @@ import AgentDiscovery from "./components/AgentDiscovery";
 import AgentCardDisplay from "./components/AgentCardDisplay";
 import ChatInterface from "./components/ChatInterface";
 import { AgentClientWrapper } from "./utils/api";
+import { sendMessageToOrchestrator } from "./utils/orchestratorApi";
 import type { AgentCard, Message } from "./types/agent";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
   const [error, setError] = useState<string>("");
   const [client, setClient] = useState<AgentClientWrapper | null>(null);
   const [contextId] = useState<string>(crypto.randomUUID());
+  const [useOrchestrator, setUseOrchestrator] = useState(true);
 
   const handleAgentDiscovered = async (url: string) => {
     setIsDiscovering(true);
@@ -37,7 +39,7 @@ function App() {
   };
 
   const handleSendMessage = async (text: string) => {
-    if (!client || !agentCard) return;
+    if (!agentCard) return;
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -61,17 +63,42 @@ function App() {
     setMessages((prev) => [...prev, placeholderMessage]);
 
     try {
-      // Stream response from agent with real-time updates
-      await client.sendMessage(
-        text,
-        (chunk: string) => {
-          // Update the placeholder message with each chunk
-          setMessages((prev) =>
-            prev.map((msg) => (msg.id === placeholderMessageId ? { ...msg, text: msg.text + chunk } : msg)),
-          );
-        },
-        contextId,
-      );
+      if (useOrchestrator) {
+        // Use Heroku MIA orchestrator
+        const orchestratorMessages = messages
+          .filter((m) => m.role === "user" || m.role === "agent")
+          .map((m) => ({ role: m.role === "agent" ? ("assistant" as const) : ("user" as const), content: m.text }));
+
+        orchestratorMessages.push({ role: "user", content: text });
+
+        await sendMessageToOrchestrator(
+          orchestratorMessages,
+          (chunk: string) => {
+            console.log(`📝 Received chunk in App.tsx: "${chunk}"`);
+            // Update the placeholder message with each chunk
+            setMessages((prev) =>
+              prev.map((msg) => (msg.id === placeholderMessageId ? { ...msg, text: msg.text + chunk } : msg)),
+            );
+          },
+          (tool: string, result: string) => {
+            console.log(`🔧 ${tool} returned: ${result.substring(0, 100)}...`);
+          },
+        );
+      } else {
+        // Direct A2A call to Agentforce
+        if (!client) return;
+
+        await client.sendMessage(
+          text,
+          (chunk: string) => {
+            // Update the placeholder message with each chunk
+            setMessages((prev) =>
+              prev.map((msg) => (msg.id === placeholderMessageId ? { ...msg, text: msg.text + chunk } : msg)),
+            );
+          },
+          contextId,
+        );
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to send message";
       setError(errorMessage);
@@ -107,6 +134,38 @@ function App() {
           {/* Agent Card Display Section */}
           {agentCard && (
             <>
+              {/* Mode Toggle */}
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Chat Mode</h3>
+                    <p className="text-sm text-gray-600">
+                      {useOrchestrator ? "Heroku MIA Orchestrator (Agent-to-Agent)" : "Direct A2A Connection"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setUseOrchestrator(!useOrchestrator);
+                      setMessages([]);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition font-medium"
+                  >
+                    Switch to {useOrchestrator ? "Direct Mode" : "Orchestrator Mode"}
+                  </button>
+                </div>
+                {useOrchestrator && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-blue-600">🤖</span>
+                      <p className="text-sm text-blue-800">
+                        <strong>Orchestrator Mode:</strong> Your questions are first analyzed by Heroku MIA LLM, which
+                        intelligently decides when to delegate to the Agentforce agent via A2A protocol.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <AgentCardDisplay agentCard={agentCard} />
 
               {/* Chat Interface Section */}
@@ -115,6 +174,7 @@ function App() {
                 onSendMessage={handleSendMessage}
                 messages={messages}
                 isLoading={isSending}
+                useOrchestrator={useOrchestrator}
               />
 
               {/* Reset Button */}
