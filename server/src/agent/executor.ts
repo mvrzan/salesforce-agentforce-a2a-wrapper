@@ -186,7 +186,6 @@ export class FinancialAgentExecutor implements AgentExecutor {
                 // Extract text from Agentforce SSE format
                 if (jsonData.message?.type === "TextChunk" && jsonData.message?.message) {
                   const chunkText = jsonData.message.message;
-                  console.log(`${getCurrentTimestamp()} 📤 Publishing chunk: "${chunkText}"`);
 
                   // Publish artifact update immediately (streaming pattern from official example)
                   const artifactUpdate: TaskArtifactUpdateEvent = {
