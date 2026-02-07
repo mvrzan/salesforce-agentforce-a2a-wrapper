@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import agentActionRoutes from "./routes/agentActions.ts";
 import agentforceApiRoutes from "./routes/agentforceApi.ts";
+import orchestratorChatRoutes from "./routes/orchestratorChat.ts";
 import { getCurrentTimestamp } from "./utils/loggingUtil.ts";
 import { setupAgentRoutes } from "./routes/a2aRoutes.ts";
 
@@ -21,6 +22,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 setupAgentRoutes(app, baseUrl);
+app.use(orchestratorChatRoutes);
 app.use(agentActionRoutes);
 app.use(agentforceApiRoutes);
 app.use(express.static("public"));
