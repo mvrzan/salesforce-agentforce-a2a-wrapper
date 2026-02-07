@@ -43,8 +43,6 @@ async function queryAgentforce(query: string): Promise<string> {
     const factory = new ClientFactory();
     const client = await factory.createFromUrl(baseUrl);
 
-    console.log("client", client);
-
     console.log(`${getCurrentTimestamp()} 🔄 - Orchestrator calling Agentforce: "${query}"`);
 
     let fullResponse = "";
