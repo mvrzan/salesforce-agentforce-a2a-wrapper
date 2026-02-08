@@ -161,9 +161,10 @@ export default function ChatInterface({
       <div className="border-t border-gray-200 p-4">
         <div className="flex space-x-2">
           <textarea
+            id="input-field"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="Type your message... (Press Enter to send)"
             disabled={isLoading}
             rows={1}
