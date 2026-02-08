@@ -14,8 +14,14 @@ export async function sendMessageToOrchestrator(
   onChunk: (chunk: string) => void,
   onToolCall?: (tool: string, result: string) => void,
 ): Promise<void> {
+  // Use production URL if deployed, localhost for local development
+  const baseUrl =
+    window.location.hostname === "localhost"
+      ? "http://localhost:3000"
+      : "https://agentforce-a2a-wrapper-81144c5228d0.herokuapp.com";
+
   console.log("📤 Sending to orchestrator:", messages);
-  const response = await fetch("http://localhost:3000/api/orchestrator/chat", {
+  const response = await fetch(`${baseUrl}/api/orchestrator/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
