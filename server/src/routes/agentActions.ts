@@ -25,10 +25,10 @@ const initHerokuMiddleware = async () => {
       getCompanyProfile,
     );
 
-    console.log(`${getCurrentTimestamp()} ✅ - Agent Action routes registered successfully!`);
+    console.log(`${getCurrentTimestamp()} ✅ - agentActions - Agent Action routes registered successfully!`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`${getCurrentTimestamp()} ❌ Failed to initialize Agent Action routes: ${message}`);
+    console.error(`${getCurrentTimestamp()} ❌ - agentActions -Failed to initialize Agent Action routes: ${message}`);
   }
 };
 
