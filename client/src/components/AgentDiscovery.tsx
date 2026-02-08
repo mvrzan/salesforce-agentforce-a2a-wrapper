@@ -7,7 +7,12 @@ interface AgentDiscoveryProps {
 }
 
 export default function AgentDiscovery({ onAgentDiscovered, isLoading }: AgentDiscoveryProps) {
-  const [url, setUrl] = useState("http://localhost:3000");
+  const defaultUrl =
+    window.location.hostname === "localhost"
+      ? "http://localhost:3000"
+      : "https://agentforce-a2a-wrapper-81144c5228d0.herokuapp.com";
+
+  const [url, setUrl] = useState(defaultUrl);
   const [error, setError] = useState<string>("");
 
   const handleDiscover = () => {
