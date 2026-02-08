@@ -7,16 +7,14 @@ import { FinancialAgentExecutor } from "../agent/executor.ts";
 import { getCurrentTimestamp } from "../utils/loggingUtil.ts";
 
 export function setupAgentRoutes(app: Express, baseUrl: string): void {
-  // Create agent components
   const agentCard = createAgentCard(baseUrl);
   const agentExecutor = new FinancialAgentExecutor();
   const requestHandler = new DefaultRequestHandler(agentCard, new InMemoryTaskStore(), agentExecutor);
 
-  // Setup A2A protocol routes with logging
   app.use(
     `/${AGENT_CARD_PATH}`,
     (req, _res, next) => {
-      console.log(`${getCurrentTimestamp()} 📋 - Agent Card requested: ${req.method} ${req.path}`);
+      console.log(`${getCurrentTimestamp()} 📋 - a2aRoutes - Agent Card requested: ${req.method} ${req.path}`);
       next();
     },
     agentCardHandler({ agentCardProvider: requestHandler }),
@@ -25,7 +23,7 @@ export function setupAgentRoutes(app: Express, baseUrl: string): void {
   app.use(
     "/a2a/jsonrpc",
     (req, _res, next) => {
-      console.log(`${getCurrentTimestamp()} 🔌 - JSON-RPC request: ${req.method} ${req.path}`);
+      console.log(`${getCurrentTimestamp()} 🔌 - a2aRoutes - JSON-RPC request: ${req.method} ${req.path}`);
       next();
     },
     jsonRpcHandler({ requestHandler, userBuilder: UserBuilder.noAuthentication }),
@@ -34,7 +32,7 @@ export function setupAgentRoutes(app: Express, baseUrl: string): void {
   app.use(
     "/a2a/rest",
     (req, _res, next) => {
-      console.log(`${getCurrentTimestamp()} 🌐 - REST request: ${req.method} ${req.path}`);
+      console.log(`${getCurrentTimestamp()} 🌐 - a2aRoutes - REST request: ${req.method} ${req.path}`);
       next();
     },
     restHandler({ requestHandler, userBuilder: UserBuilder.noAuthentication }),
