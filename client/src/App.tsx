@@ -4,6 +4,7 @@ import Footer from "./components/Footer";
 import AgentDiscovery from "./components/AgentDiscovery";
 import AgentCardDisplay from "./components/AgentCardDisplay";
 import ChatInterface from "./components/ChatInterface";
+import ArchitectureDiagram from "./components/ArchitectureDiagram";
 import { AgentClientWrapper } from "./utils/api";
 import { sendMessageToOrchestrator } from "./utils/orchestratorApi";
 import type { AgentCard, Message } from "./types/agent";
@@ -196,42 +197,7 @@ function App() {
         </div>
 
         {/* Architecture Diagram */}
-        <div className="mt-12 bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Architecture Overview</h2>
-          <div className="bg-linear-to-r from-blue-50 to-purple-50 rounded-lg p-6">
-            <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 text-center">
-              <div className="bg-white rounded-lg p-4 shadow">
-                <div className="text-2xl mb-2">👤</div>
-                <div className="font-semibold text-gray-900">A2A Client</div>
-                <div className="text-xs text-gray-600">(This Website)</div>
-              </div>
-
-              <div className="text-2xl">→</div>
-
-              <div className="bg-white rounded-lg p-4 shadow">
-                <div className="text-2xl mb-2">🌐</div>
-                <div className="font-semibold text-gray-900">A2A Server</div>
-                <div className="text-xs text-gray-600">(Your Bridge)</div>
-              </div>
-
-              <div className="text-2xl">→</div>
-
-              <div className="bg-white rounded-lg p-4 shadow">
-                <div className="text-2xl mb-2">⚡</div>
-                <div className="font-semibold text-gray-900">Agentforce</div>
-                <div className="text-xs text-gray-600">(Salesforce APIs)</div>
-              </div>
-
-              <div className="text-2xl">→</div>
-
-              <div className="bg-white rounded-lg p-4 shadow">
-                <div className="text-2xl mb-2">📊</div>
-                <div className="font-semibold text-gray-900">Data Sources</div>
-                <div className="text-xs text-gray-600">(Finnhub, etc.)</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ArchitectureDiagram useOrchestrator={useOrchestrator} />
       </main>
 
       <Footer />
