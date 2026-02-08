@@ -47,7 +47,7 @@ export default function ChatInterface({
   const exampleQuestions = [
     "What's the current stock price of CRM?",
     "Tell me about Salesforce company profile",
-    "What is the stock price for AAPL?",
+    "What is the latest gross revenue reported by Salesforce?",
   ];
 
   const loadingMessage = useOrchestrator ? "Thinking and consulting agents..." : "Contacting Agentforce Agent...";
