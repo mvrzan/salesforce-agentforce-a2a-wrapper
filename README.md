@@ -319,24 +319,9 @@ To run this application locally, you will need the following:
    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    ```
 
-4. **Configure Client Environment Variables**
+   ⚠️ **Note**: The client does not require environment variables. It automatically detects whether it's running on localhost or in production and adjusts API URLs accordingly.
 
-   ```bash
-   cd ../../client
-   cp .env.example .env
-   ```
-
-   Edit `client/.env` with the **same** API secret:
-
-   ```bash
-   # API Configuration
-   VITE_API_URL=http://localhost:3000
-   VITE_API_SECRET=your_generated_secret_key
-   ```
-
-   ⚠️ **Important**: The `API_SECRET` on the server must match `VITE_API_SECRET` on the client.
-
-5. **Install Dependencies**
+4. **Install Dependencies**
 
    Install server dependencies:
 
@@ -352,7 +337,7 @@ To run this application locally, you will need the following:
    npm install
    ```
 
-6. **Start the Application**
+5. **Start the Application**
 
    Start the server (from the `server` directory):
 
@@ -366,7 +351,7 @@ To run this application locally, you will need the following:
    npm run dev
    ```
 
-7. **Access the Application**
+6. **Access the Application**
 
    Open your browser and navigate to `http://localhost:5173`
 
@@ -418,16 +403,16 @@ Once you are happy with your application, you can deploy it to Heroku!
 
 4. **Build and Deploy Client**
 
-   Build the client with production environment variables:
+   Build the client:
 
    ```bash
    cd client
-   VITE_API_URL=https://your-app-name.herokuapp.com VITE_API_SECRET=your_generated_secret_key npm run build
+   npm run build
    ```
 
    The built files will be in `client/dist/` and are served by the Express server.
 
-   **Note:** Make sure the `VITE_API_URL` points to your Heroku app URL and the `VITE_API_SECRET` matches the `API_SECRET` you set in step 2.
+   **Note:** The client automatically detects the production environment and uses the appropriate API URL (no environment variables needed).
 
 5. **Deploy to Heroku**
 
@@ -442,8 +427,6 @@ Once you are happy with your application, you can deploy it to Heroku!
    ```
 
 For more detailed deployment instructions, please follow the [official Heroku documentation](https://devcenter.heroku.com/articles/git).
-
-**Security Note:** When deploying publicly, be aware that the `API_SECRET` will be visible in the client bundle. For production use with external users, consider implementing additional security measures such as user authentication or IP whitelisting.
 
 ---
 
