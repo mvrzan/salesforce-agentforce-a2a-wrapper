@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { getCurrentTimestamp } from "../utils/loggingUtil.ts";
 import { queryAgentforce } from "../utils/agentforceClient.ts";
 
-const HEROKU_MIA_URL = process.env.INFERENCE_URL;
+const HEROKU_MIA_URL = `${process.env.INFERENCE_URL}/v1/chat/completions`;
 const HEROKU_MIA_TOKEN = process.env.INFERENCE_KEY;
 const HEROKU_MIA_MODEL = process.env.INFERENCE_MODEL_ID;
 
