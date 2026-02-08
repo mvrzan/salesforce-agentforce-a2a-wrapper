@@ -159,7 +159,7 @@ Be conversational and helpful. If the user's question is about financial markets
               // If we have a complete tool call, execute it
               if (parsed.choices?.[0]?.finish_reason === "tool_calls" && currentToolCall) {
                 console.log(
-                  `${getCurrentTimestamp()} 🔧 - streamOrchestratorChat 0 LLM requesting tool: ${currentToolCall.name}`,
+                  `${getCurrentTimestamp()} 🔧 - streamOrchestratorChat - LLM requesting tool: ${currentToolCall.name}`,
                 );
 
                 if (currentToolCall.name === "query_agentforce") {
