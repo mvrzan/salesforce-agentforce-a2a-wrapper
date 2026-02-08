@@ -269,7 +269,10 @@ Be conversational and helpful. If the user's question is about financial markets
                 currentToolCall = null;
               }
             } catch (parseError) {
-              // Ignore JSON parse errors for incomplete chunks
+              console.warn(
+                `${getCurrentTimestamp()} ⚠️ - streamOrchestratorChat - Failed to parse SSE data:`,
+                parseError instanceof Error ? parseError.message : parseError,
+              );
             }
           }
         }
