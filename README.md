@@ -28,6 +28,7 @@ Connect Salesforce Agentforce to the world through the Agent-to-Agent (A2A) Prot
   - [Requirements](#requirements)
   - [Setup](#setup)
     - [Local Environment Configuration](#local-environment-configuration)
+  - [Salesforce configuration](#salesforce-configuration)
   - [Deployment](#deployment)
     - [Heroku Deployment](#heroku-deployment)
 - [License](#license)
@@ -289,6 +290,10 @@ To run this application locally, you will need the following:
    Open your browser and navigate to `http://localhost:5173`
 
 ---
+
+## Salesforce configuration
+
+TODO: In progress...
 
 ## Deployment
 
