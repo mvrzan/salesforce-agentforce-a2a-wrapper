@@ -133,6 +133,8 @@ _Screenshot showing direct A2A client-to-agent communication_
 
 ### Architecture Diagram - Orchestrator Mode
 
+![](./screenshots/architecture-diagram-orchestrator-mode.png)
+
 ---
 
 ## API Specification
