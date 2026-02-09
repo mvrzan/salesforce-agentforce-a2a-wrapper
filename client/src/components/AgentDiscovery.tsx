@@ -7,10 +7,7 @@ interface AgentDiscoveryProps {
 }
 
 export default function AgentDiscovery({ onAgentDiscovered, isLoading }: AgentDiscoveryProps) {
-  const defaultUrl =
-    window.location.hostname === "localhost"
-      ? "http://localhost:3000"
-      : "https://agentforce-a2a-wrapper-81144c5228d0.herokuapp.com";
+  const defaultUrl = window.location.hostname === "localhost" ? "http://localhost:3000" : import.meta.env.VITE_API_URL;
 
   const [url, setUrl] = useState(defaultUrl);
   const [error, setError] = useState<string>("");
