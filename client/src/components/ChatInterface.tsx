@@ -97,7 +97,7 @@ export default function ChatInterface({
                     message.role === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
                   }`}
                 >
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-start space-x-2">
                     <span className="text-lg">{message.role === "user" ? "👤" : "🤖"}</span>
                     <div className="flex-1">
                       {message.role === "agent" && !message.text ? (
@@ -120,28 +120,40 @@ export default function ChatInterface({
                         </div>
                       ) : (
                         <>
-                          <div className="text-sm prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-900 prose-strong:text-gray-900 prose-li:text-gray-900">
-                            <ReactMarkdown
-                              components={{
-                                // Style headers
-                                h1: ({ children }) => <h1 className="text-xl font-bold mb-2 mt-3">{children}</h1>,
-                                h2: ({ children }) => <h2 className="text-lg font-bold mb-2 mt-2">{children}</h2>,
-                                h3: ({ children }) => <h3 className="text-base font-bold mb-1 mt-2">{children}</h3>,
-                                // Style lists
-                                ul: ({ children }) => <ul className="list-disc pl-4 my-2 space-y-1">{children}</ul>,
-                                ol: ({ children }) => <ol className="list-decimal pl-4 my-2 space-y-1">{children}</ol>,
-                                li: ({ children }) => <li className="text-sm">{children}</li>,
-                                // Style paragraphs
-                                p: ({ children }) => <p className="my-1">{children}</p>,
-                                // Style code
-                                code: ({ children }) => (
-                                  <code className="bg-gray-200 px-1 py-0.5 rounded text-xs">{children}</code>
-                                ),
-                              }}
-                            >
-                              {message.text}
-                            </ReactMarkdown>
-                          </div>
+                          {/* Check if this is a status message */}
+                          {message.text.endsWith("...") && message.role === "agent" ? (
+                            <div className="flex items-center space-x-2">
+                              <div className="relative">
+                                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                              </div>
+                              <span className="text-sm italic text-gray-500">{message.text}</span>
+                            </div>
+                          ) : (
+                            <div className="text-sm prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-900 prose-strong:text-gray-900 prose-li:text-gray-900">
+                              <ReactMarkdown
+                                components={{
+                                  // Style headers
+                                  h1: ({ children }) => <h1 className="text-xl font-bold mb-2 mt-3">{children}</h1>,
+                                  h2: ({ children }) => <h2 className="text-lg font-bold mb-2 mt-2">{children}</h2>,
+                                  h3: ({ children }) => <h3 className="text-base font-bold mb-1 mt-2">{children}</h3>,
+                                  // Style lists
+                                  ul: ({ children }) => <ul className="list-disc pl-4 my-2 space-y-1">{children}</ul>,
+                                  ol: ({ children }) => (
+                                    <ol className="list-decimal pl-4 my-2 space-y-1">{children}</ol>
+                                  ),
+                                  li: ({ children }) => <li className="text-sm">{children}</li>,
+                                  // Style paragraphs
+                                  p: ({ children }) => <p className="my-1">{children}</p>,
+                                  // Style code
+                                  code: ({ children }) => (
+                                    <code className="bg-gray-200 px-1 py-0.5 rounded text-xs">{children}</code>
+                                  ),
+                                }}
+                              >
+                                {message.text}
+                              </ReactMarkdown>
+                            </div>
+                          )}
                           <span className="text-xs opacity-70 mt-1 block">
                             {message.timestamp.toLocaleTimeString()}
                           </span>
