@@ -76,36 +76,21 @@ Key capabilities:
 2. **MIA Routing**: Request reaches Heroku Managed Inference and Agents (Claude 4.5 Sonnet)
 3. **Decision Making**: MIA analyzes the query and decides if it requires financial agent assistance
 4. **Tool Invocation**: For financial queries, MIA calls the `query_agentforce` function
-5. **A2A Communication**: Server acts as A2A client to communicate with Agentforce
-6. **Agent Execution**: Agentforce processes the request using Heroku AppLink for Salesforce API calls
-7. **Data Retrieval**: Agent fetches stock prices, company profiles, or earnings data
+5. **A2A Communication**: Server acts as A2A client to communicate with Agentforce via the A2A protocol
+6. **Agent Execution**: Agentforce processes the request
+7. **Data Retrieval**: Agent fetches stock prices, company profiles, or earnings data using Heroku AppLink for API calls
 8. **Response Synthesis**: MIA receives the tool result and generates a conversational response
 9. **Streaming Display**: Response streams back to user via SSE in real-time
 
 **Direct A2A Mode Flow:**
 
-1. **Agent Discovery**: Client fetches agent card from `/.well-known/a2a/agentcard.json`
-2. **Session Creation**: First message creates a new Agentforce session (cached for 30 minutes)
+1. **Agent Discovery**: Client fetches agent card from `/.well-known/a2a/agent-card.json`
+2. **Session Creation**: First message creates a new Agentforce session
 3. **Message Streaming**: User message sent via A2A JSON-RPC protocol
 4. **Agent Processing**: FinancialAgentExecutor handles the request with session reuse
 5. **Salesforce Integration**: Heroku AppLink provides authorized access to Salesforce APIs
 6. **Real-time Streaming**: Artifact-update events push response chunks immediately
 7. **Client Rendering**: React frontend displays streaming responses with markdown formatting
-
-**Session Caching Architecture:**
-
-- **First Request**: ~5 seconds (creates new Agentforce session)
-- **Cached Requests**: <1 second (reuses existing session)
-- **TTL Management**: 30-minute timeout with automatic cleanup
-- **Error Recovery**: Failed sessions removed from cache, forcing fresh creation
-- **Context Isolation**: Each A2A context gets its own cached session
-
-**Authentication & Security:**
-
-- **Heroku AppLink**: OAuth 2.0 for Salesforce API authentication
-- **HMAC-SHA256**: Request signature validation for protected endpoints
-- **Environment Detection**: Automatic URL configuration for localhost vs production
-- **Token Management**: Bearer token authentication for Heroku MIA
 
 ---
 
