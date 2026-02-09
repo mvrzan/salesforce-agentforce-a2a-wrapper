@@ -23,7 +23,6 @@ Connect Salesforce Agentforce to the world through the Agent-to-Agent (A2A) Prot
   - [API Specification](#api-specification)
     - [A2A Protocol Endpoints](#a2a-protocol-endpoints)
     - [Orchestrator Endpoint](#orchestrator-endpoint)
-    - [Agent Action Endpoints](#agent-action-endpoints)
   - [Technologies Used](#technologies-used)
 - [Configuration](#configuration)
   - [Requirements](#requirements)
@@ -114,7 +113,7 @@ Key capabilities:
 
 ### A2A Protocol Endpoints
 
-**GET `/.well-known/a2a/agentcard.json`**
+**GET `/.well-known/a2a/agent-card.json`**
 
 - Returns the A2A agent card for agent discovery
 - No authentication required
@@ -148,52 +147,6 @@ Key capabilities:
 
 **Authentication:**
 Bearer token authentication using `INFERENCE_KEY` environment variable
-
-### Agent Action Endpoints
-
-> **⚠️ INTERNAL TESTING ENDPOINTS ONLY ⚠️**
->
-> These endpoints bypass the A2A protocol and orchestrator layers.
-> They are provided for direct Agentforce API testing and debugging only.
-
-**POST `/api/agentforce/start-session`**
-
-- Directly creates an Agentforce session
-- Headers: `X-Timestamp`, `X-Signature`, `Content-Type: application/json`
-- Body: `{ externalSessionKey: string }`
-- Returns: `{ sessionId: string, messages: Array }`
-
-**POST `/api/agentforce/send-message`**
-
-- Sends message to existing Agentforce session with streaming
-- Headers: `X-Timestamp`, `X-Signature`, `Content-Type: application/json`
-- Body: `{ sessionId: string, message: string, sequenceId: number }`
-- Returns: Server-Sent Events stream
-
-**DELETE `/api/agentforce/delete-session`**
-
-- Terminates an active Agentforce session
-- Headers: `X-Timestamp`, `X-Signature`, `Content-Type: application/json`
-- Body: `{ sessionId: string }`
-- Returns: `{ success: true }`
-
-**GET `/api/agent-actions/stock-price/:symbol`**
-
-- Retrieves current stock price for a symbol
-- Headers: `X-Timestamp`, `X-Signature`
-- Returns: `{ symbol: string, price: number, ... }`
-
-**GET `/api/agent-actions/company-profile/:symbol`**
-
-- Fetches detailed company profile information
-- Headers: `X-Timestamp`, `X-Signature`
-- Returns: `{ name: string, industry: string, ... }`
-
-**Authentication for Agent Actions:**
-All requests require HMAC-SHA256 signature in headers:
-
-- `X-Timestamp`: Current timestamp in milliseconds
-- `X-Signature`: HMAC-SHA256(API_SECRET, timestamp + method + path)
 
 ---
 
