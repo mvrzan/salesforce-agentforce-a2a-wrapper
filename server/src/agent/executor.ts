@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import type { Message, Task, TaskStatus, Artifact, TaskArtifactUpdateEvent } from "@a2a-js/sdk";
+import type { Message, Task, TaskStatus, TaskArtifactUpdateEvent } from "@a2a-js/sdk";
 import type { AgentExecutor, RequestContext, ExecutionEventBus } from "@a2a-js/sdk/server";
 import { getCurrentTimestamp } from "../utils/loggingUtil.ts";
 import salesforceSdk from "@heroku/applink";
@@ -72,13 +72,45 @@ export class FinancialAgentExecutor implements AgentExecutor {
         kind: "status-update",
         taskId,
         contextId,
-        status: { state: "working", timestamp: new Date().toISOString() } as TaskStatus,
+        status: {
+          state: "working",
+          timestamp: new Date().toISOString(),
+        } as TaskStatus,
         final: false,
+      });
+
+      console.log(`${getCurrentTimestamp()} 📊 - Status: Initializing agent connection...`);
+
+      // Publish detailed status as artifact
+      eventBus.publish({
+        kind: "artifact-update",
+        taskId,
+        contextId,
+        artifact: {
+          artifactId: "__status__",
+          name: "status",
+          parts: [{ kind: "text", text: "Initializing agent connection..." }],
+        },
+        append: false,
       });
 
       // Step 1: Start Agentforce session (only if we don't have a cached session)
       if (isNewSession) {
         console.log(`${getCurrentTimestamp()} 🚀 - FinancialAgentExecutor - Starting new Agentforce session...`);
+
+        // Publish status: creating new session
+        console.log(`${getCurrentTimestamp()} 📊 - Status: Creating new Agentforce session...`);
+        eventBus.publish({
+          kind: "artifact-update",
+          taskId,
+          contextId,
+          artifact: {
+            artifactId: "__status__",
+            name: "status",
+            parts: [{ kind: "text", text: "Creating new Agentforce session..." }],
+          },
+          append: false,
+        });
 
         const startSessionBody = {
           externalSessionKey,
@@ -123,10 +155,54 @@ export class FinancialAgentExecutor implements AgentExecutor {
         });
 
         console.log(`${getCurrentTimestamp()} ✅ - FinancialAgentExecutor - Session started and cached: ${sessionId}`);
+
+        // Status: session ready
+        console.log(`${getCurrentTimestamp()} 📊 - Status: Session ready. Preparing query...`);
+        eventBus.publish({
+          kind: "artifact-update",
+          taskId,
+          contextId,
+          artifact: {
+            artifactId: "__status__",
+            name: "status",
+            parts: [{ kind: "text", text: "Session ready. Preparing query..." }],
+          },
+          append: false,
+        });
+      } else {
+        // Status: using cached session
+        console.log(`${getCurrentTimestamp()} 📊 - Status: Using cached session. Preparing query...`);
+        eventBus.publish({
+          kind: "artifact-update",
+          taskId,
+          contextId,
+          artifact: {
+            artifactId: "__status__",
+            name: "status",
+            parts: [{ kind: "text", text: "Using cached session. Preparing query..." }],
+          },
+          append: false,
+        });
       }
 
       // Step 2: Send message to Agentforce (streaming)
       console.log(`${getCurrentTimestamp()} 📤 - FinancialAgentExecutor - Sending message to Agentforce...`);
+
+      // Status: querying Agentforce
+      console.log(
+        `${getCurrentTimestamp()} 📊 - Status: Querying Agentforce: "${userText.substring(0, 50)}${userText.length > 50 ? "..." : ""}"`,
+      );
+      eventBus.publish({
+        kind: "artifact-update",
+        taskId,
+        contextId,
+        artifact: {
+          artifactId: "__status__",
+          name: "status",
+          parts: [{ kind: "text", text: "Querying Agentforce agent..." }],
+        },
+        append: false,
+      });
 
       const sendMessageBody = {
         message: {
@@ -158,11 +234,26 @@ export class FinancialAgentExecutor implements AgentExecutor {
         throw new Error("Response body is null");
       }
 
+      // Status: receiving response
+      console.log(`${getCurrentTimestamp()} 📊 - Status: Receiving response from Agentforce...`);
+      eventBus.publish({
+        kind: "artifact-update",
+        taskId,
+        contextId,
+        artifact: {
+          artifactId: "__status__",
+          name: "status",
+          parts: [{ kind: "text", text: "Receiving response from Agentforce..." }],
+        },
+        append: false,
+      });
+
       // Read the streaming response and publish artifact updates in real-time
       const reader = sendMessageResponse.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
       const artifactId = uuidv4();
+      let firstChunkReceived = false;
 
       try {
         while (true) {
@@ -186,6 +277,23 @@ export class FinancialAgentExecutor implements AgentExecutor {
                 // Extract text from Agentforce SSE format
                 if (jsonData.message?.type === "TextChunk" && jsonData.message?.message) {
                   const chunkText = jsonData.message.message;
+
+                  // Log first chunk received
+                  if (!firstChunkReceived) {
+                    firstChunkReceived = true;
+                    console.log(`${getCurrentTimestamp()} 📊 - Status: Streaming response...`);
+                    eventBus.publish({
+                      kind: "artifact-update",
+                      taskId,
+                      contextId,
+                      artifact: {
+                        artifactId: "__status__",
+                        name: "status",
+                        parts: [{ kind: "text", text: "Streaming response from agent..." }],
+                      },
+                      append: false,
+                    });
+                  }
 
                   // Publish artifact update immediately (streaming pattern from official example)
                   const artifactUpdate: TaskArtifactUpdateEvent = {
@@ -222,9 +330,14 @@ export class FinancialAgentExecutor implements AgentExecutor {
         kind: "status-update",
         taskId,
         contextId,
-        status: { state: "completed", timestamp: new Date().toISOString() } as TaskStatus,
+        status: {
+          state: "completed",
+          timestamp: new Date().toISOString(),
+        } as TaskStatus,
         final: true,
       });
+
+      console.log(`${getCurrentTimestamp()} 📊 - Status: Task completed successfully`);
 
       // Don't delete the session - keep it cached for reuse
       console.log(`${getCurrentTimestamp()} ✅ - FinancialAgentExecutor - Message complete, session kept alive`);
@@ -234,6 +347,20 @@ export class FinancialAgentExecutor implements AgentExecutor {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error(`${getCurrentTimestamp()} ❌ - FinancialAgentExecutor - Error:`, errorMessage);
+
+      // Publish failed status
+      eventBus.publish({
+        kind: "status-update",
+        taskId: requestContext.taskId,
+        contextId: requestContext.contextId,
+        status: {
+          state: "failed",
+          timestamp: new Date().toISOString(),
+        } as TaskStatus,
+        final: true,
+      });
+
+      console.log(`${getCurrentTimestamp()} 📊 - Status: Task failed: ${errorMessage}`);
 
       // On error, remove the session from cache and delete it
       if (sessionId && requestContext.contextId) {
