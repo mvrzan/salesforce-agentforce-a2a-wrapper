@@ -164,12 +164,12 @@ Bearer token authentication using `INFERENCE_KEY` environment variable
 **Server**
 
 - [Node.js](https://nodejs.org/en) - JavaScript runtime
+- [TypeScript](https://www.typescriptlang.org/) - Type-safe JavaScript
 - [Express](https://expressjs.com/) - 5.2.1 - Web framework
 - [A2A SDK](https://www.npmjs.com/package/@a2a-js/sdk) - 0.3.9 - A2A Protocol server implementation
 - [Heroku AppLink](https://www.npmjs.com/package/@heroku/applink) - Salesforce authentication and API access
-- [Salesforce Einstein Agentforce API v1](https://developer.salesforce.com/docs/einstein/genai/guide/agent-api.html) - AI agent integration
+- [Salesforce Agentforce API v1](https://developer.salesforce.com/docs/einstein/genai/guide/agent-api.html) - AI agent integration
 - [Heroku Managed Inference and Agents](https://www.heroku.com/inference) - Claude 4.5 Sonnet orchestration
-- [TypeScript](https://www.typescriptlang.org/) - Type-safe JavaScript
 - [HMAC-SHA256](https://nodejs.org/api/crypto.html#cryptocreatehmacalgorithm-key-options) - Request signature validation
 
 For a more detailed overview of the development & production dependencies, please check server [`package.json`](./server/package.json) or client [`package.json`](./client/package.json).
