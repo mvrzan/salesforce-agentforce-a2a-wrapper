@@ -1,3 +1,5 @@
+import { generateSignature } from "./requestSigner";
+
 interface OrchestratorMessage {
   role: "user" | "assistant";
   content: string;
@@ -17,16 +19,18 @@ export async function sendMessageToOrchestrator(
   onStatus?: (message: string) => void,
 ): Promise<void> {
   // Use production URL if deployed, localhost for local development
-  const baseUrl =
-    window.location.hostname === "localhost"
-      ? "http://localhost:3000"
-      : "https://agentforce-a2a-wrapper-81144c5228d0.herokuapp.com";
+  const baseUrl = window.location.hostname === "localhost" ? "http://localhost:3000" : import.meta.env.VITE_API_URL;
+
+  // Generate signature for request authentication
+  const { timestamp, signature } = await generateSignature("POST", "/api/orchestrator/chat");
 
   console.log("📤 Sending to orchestrator:", messages);
   const response = await fetch(`${baseUrl}/api/orchestrator/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "X-Timestamp": timestamp,
+      "X-Signature": signature,
     },
     body: JSON.stringify({ messages }),
   });
