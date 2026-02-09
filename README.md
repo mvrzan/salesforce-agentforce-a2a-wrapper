@@ -207,7 +207,7 @@ To run this application locally, you will need the following:
 
    > **Important**: This application uses Heroku AppLink to authenticate with Salesforce. You need to configure AppLink in your Salesforce org first.
 
-   Follow the [Heroku AppLink documentation](https://devcenter.heroku.com/articles/applink) to:
+   Follow the [Heroku AppLink documentation](https://devcenter.heroku.com/articles/getting-started-heroku-applink-agentforce) to:
    - Create a Connected App in Salesforce
    - Configure OAuth scopes (api, refresh_token, offline_access)
    - Add your Heroku app to the AppLink configuration
@@ -231,9 +231,9 @@ To run this application locally, you will need the following:
    APP_LINK_CONNECTION_NAME=your_applink_connection_name
 
    # Heroku Managed Inference and Agents (Claude 4.5 Sonnet)
-   INFERENCE_URL=https://us.inference.heroku.com
+   INFERENCE_URL=your_heroku_inference_url
    INFERENCE_KEY=your_heroku_inference_api_key
-   INFERENCE_MODEL_ID=claude-4-5-sonnet
+   INFERENCE_MODEL_ID=your_selected_llm_model
 
    # API Security
    API_SECRET=your_generated_secret_key
@@ -322,31 +322,17 @@ Once you are happy with your application, you can deploy it to Heroku!
    heroku config:set INFERENCE_MODEL_ID=claude-4-5-sonnet
    heroku config:set API_SECRET=your_generated_secret_key
    heroku config:set FINHUB_API_KEY=your_finhub_api_key
+   heroku config:set VITE_API_SECRET=your_finhub_api_key
+   heroku config:set VITE_API_URL=your_finhub_api_key
    ```
 
 3. **Configure AppLink Addon**
 
-   Add and configure the Heroku AppLink addon:
+   Add and configure the [Heroku AppLink](https://devcenter.heroku.com/articles/getting-started-heroku-applink-agentforce) addon.
 
-   ```bash
-   heroku addons:create applink
-   heroku addons:info applink
-   ```
+4. **Configure MIA Addon**
 
-   Follow the prompts to connect your Salesforce org.
-
-4. **Build and Deploy Client**
-
-   Build the client:
-
-   ```bash
-   cd client
-   npm run build
-   ```
-
-   The built files will be in `client/dist/` and are served by the Express server.
-
-   **Note:** The client automatically detects the production environment and uses the appropriate API URL (no environment variables needed).
+   Add and configure the [Heroku MIA](https://devcenter.heroku.com/articles/heroku-inference) addon.
 
 5. **Deploy to Heroku**
 
