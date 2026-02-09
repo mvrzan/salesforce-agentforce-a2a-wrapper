@@ -39,7 +39,7 @@ Connect Salesforce Agentforce to the world through the Agent-to-Agent (A2A) Prot
 
 ## What does it do?
 
-This application demonstrates how to **expose Salesforce Agentforce agents through the A2A (Agent-to-Agent) Protocol** while adding an intelligent orchestration layer powered by **Heroku Managed Inference and Agents (MIA)**.
+This application demonstrates how to **expose Salesforce [Agentforce ](https://www.salesforce.com/ca/agentforce/)agents through the A2A (Agent-to-Agent) Protocol** while adding an intelligent orchestration layer powered by **[Heroku Managed Inference and Agents (MIA)](https://www.heroku.com/ai/managed-inference-and-agents/)**.
 
 The demo showcases two operational modes:
 
@@ -62,7 +62,7 @@ Key capabilities:
 
 - **A2A Protocol Compliance**: Full implementation of agent card discovery and JSON-RPC messaging
 - **Real-time Streaming**: Server-Sent Events (SSE) for immediate response delivery
-- **Session Management**: Intelligent caching with automatic cleanup and error recovery
+- **Heroku Managed Inference and Agents**: Easily add LLM capabilities to your application
 - **Heroku AppLink Integration**: Secure Salesforce authentication and API invocations
 - **Function Calling**: Tool-based architecture allowing MIA to delegate specialized tasks
 - **Dual Architecture**: Toggle between orchestrated and direct agent communication
