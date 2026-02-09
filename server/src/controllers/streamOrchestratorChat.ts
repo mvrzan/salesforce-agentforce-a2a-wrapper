@@ -52,6 +52,11 @@ export default async function streamOrchestratorChat(req: Request, res: Response
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
 
+    res.on("close", () => {
+      console.log(`${getCurrentTimestamp()} ❌ - streamOrchestratorChat - Client disconnected, cleaning up..."`);
+      reader?.cancel();
+    });
+
     // Add system message to give the LLM context about its capabilities
     const systemMessage: ChatMessage = {
       role: "system",
@@ -296,8 +301,20 @@ Be conversational and helpful. If the user's question is about financial markets
     }
   } catch (error) {
     console.error(`${getCurrentTimestamp()} ❌ - streamOrchestratorChat - Orchestrator error:`, error);
+
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+
     if (!res.headersSent) {
-      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+      res.status(500).json({ error: errorMessage });
+    } else {
+      res.write(
+        `data: ${JSON.stringify({
+          type: "error",
+          content: errorMessage,
+        })}\n\n`,
+      );
+
+      res.end();
     }
   }
 }
