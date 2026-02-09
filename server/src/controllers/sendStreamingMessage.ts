@@ -6,8 +6,9 @@ const sendStreamingMessage = async (req: Request, res: Response) => {
   try {
     console.log(`${getCurrentTimestamp()} 🎥 - sendStreamingMessage - Request received...`);
 
+    const connectionName = process.env.APP_LINK_CONNECTION_NAME;
     const sdk = salesforceSdk.init();
-    const auth = await sdk.addons.applink.getAuthorization("AFMatija");
+    const auth = await sdk.addons.applink.getAuthorization(connectionName);
     const accessToken = auth.accessToken;
     const sessionId = req.body.sessionId;
     const message = req.body.message;

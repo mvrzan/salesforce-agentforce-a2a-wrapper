@@ -6,8 +6,9 @@ const startSession = async (req: Request, res: Response) => {
   try {
     console.log(`${getCurrentTimestamp()} 📥 - startSession - Request received...`);
 
+    const connectionName = process.env.APP_LINK_CONNECTION_NAME;
     const sdk = salesforceSdk.init();
-    const auth = await sdk.addons.applink.getAuthorization("AFMatija");
+    const auth = await sdk.addons.applink.getAuthorization(connectionName);
     const accessToken = auth.accessToken;
     const instanceUrl = auth.domainUrl;
     const sessionId = req.params.sessionId;
