@@ -4,8 +4,9 @@ interface OrchestratorMessage {
 }
 
 interface OrchestratorStreamEvent {
-  type: "content" | "tool_result" | "error";
-  content: string;
+  type: "content" | "tool_result" | "error" | "status";
+  content?: string;
+  message?: string;
   tool?: string;
 }
 
@@ -13,6 +14,7 @@ export async function sendMessageToOrchestrator(
   messages: OrchestratorMessage[],
   onChunk: (chunk: string) => void,
   onToolCall?: (tool: string, result: string) => void,
+  onStatus?: (message: string) => void,
 ): Promise<void> {
   // Use production URL if deployed, localhost for local development
   const baseUrl =
@@ -67,13 +69,16 @@ export async function sendMessageToOrchestrator(
             const event = JSON.parse(data) as OrchestratorStreamEvent;
             console.log("📨 Parsed event:", event.type, event.content?.substring(0, 50));
 
-            if (event.type === "content") {
+            if (event.type === "content" && event.content) {
               console.log("✍️ Calling onChunk with:", event.content);
               onChunk(event.content);
-            } else if (event.type === "tool_result" && onToolCall) {
+            } else if (event.type === "status" && onStatus && event.message) {
+              console.log("📊 Status update:", event.message);
+              onStatus(event.message);
+            } else if (event.type === "tool_result" && onToolCall && event.content) {
               console.log(`🔧 Tool called: ${event.tool}, result length: ${event.content.length}`);
               onToolCall(event.tool || "unknown", event.content);
-            } else if (event.type === "error") {
+            } else if (event.type === "error" && event.content) {
               throw new Error(event.content);
             }
           } catch (parseError) {
