@@ -285,7 +285,6 @@ To run this application locally, you will need the following:
    - Create a Connected App in Salesforce
    - Configure OAuth scopes (api, refresh_token, offline_access)
    - Add your Heroku app to the AppLink configuration
-   - Note your AppLink resource name (used in code as `"AFMatija"`)
 
 3. **Configure Server Environment Variables**
 
@@ -301,6 +300,9 @@ To run this application locally, you will need the following:
    ```bash
    # Salesforce Agentforce Configuration
    AGENTFORCE_AGENT_ID=your_agentforce_agent_id
+
+   # Heroku AppLink Configuration
+   APP_LINK_CONNECTION_NAME=your_applink_connection_name
 
    # Heroku Managed Inference and Agents (Claude 4.5 Sonnet)
    INFERENCE_URL=https://us.inference.heroku.com
@@ -388,6 +390,7 @@ Once you are happy with your application, you can deploy it to Heroku!
 
    ```bash
    heroku config:set AGENTFORCE_AGENT_ID=your_agentforce_agent_id
+   heroku config:set APP_LINK_CONNECTION_NAME=your_applink_connection_name
    heroku config:set INFERENCE_URL=https://us.inference.heroku.com
    heroku config:set INFERENCE_KEY=your_heroku_inference_api_key
    heroku config:set INFERENCE_MODEL_ID=claude-4-5-sonnet
