@@ -78,11 +78,32 @@ function App() {
             console.log(`📝 Received chunk in App.tsx: "${chunk}"`);
             // Update the placeholder message with each chunk
             setMessages((prev) =>
-              prev.map((msg) => (msg.id === placeholderMessageId ? { ...msg, text: msg.text + chunk } : msg)),
+              prev.map((msg) => {
+                if (msg.id === placeholderMessageId) {
+                  // If text ends with "..." it's a status message - replace it
+                  // Otherwise append the chunk
+                  const isStatusMessage = msg.text.endsWith("...");
+                  return { ...msg, text: isStatusMessage ? chunk : msg.text + chunk };
+                }
+                return msg;
+              }),
             );
           },
           (tool: string, result: string) => {
             console.log(`🔧 ${tool} returned: ${result.substring(0, 100)}...`);
+          },
+          (message: string) => {
+            console.log(`📊 Status update: ${message}`);
+            // Update placeholder message with status (only if still showing status, not actual content)
+            setMessages((prev) =>
+              prev.map((msg) => {
+                // Only update if message is empty or ends with "..." (status message)
+                if (msg.id === placeholderMessageId && (msg.text === "" || msg.text.endsWith("..."))) {
+                  return { ...msg, text: message };
+                }
+                return msg;
+              }),
+            );
           },
         );
       } else {
@@ -94,10 +115,32 @@ function App() {
           (chunk: string) => {
             // Update the placeholder message with each chunk
             setMessages((prev) =>
-              prev.map((msg) => (msg.id === placeholderMessageId ? { ...msg, text: msg.text + chunk } : msg)),
+              prev.map((msg) => {
+                if (msg.id === placeholderMessageId) {
+                  // If text ends with "..." it's a status message - replace it
+                  // Otherwise append the chunk
+                  const isStatusMessage = msg.text.endsWith("...");
+                  return { ...msg, text: isStatusMessage ? chunk : msg.text + chunk };
+                }
+                return msg;
+              }),
             );
           },
           contextId,
+          (_state: string, message?: string) => {
+            // Update placeholder message with status (only if still showing status, not actual content)
+            if (message) {
+              setMessages((prev) =>
+                prev.map((msg) => {
+                  // Only update if message is empty or ends with "..." (status message)
+                  if (msg.id === placeholderMessageId && (msg.text === "" || msg.text.endsWith("..."))) {
+                    return { ...msg, text: message };
+                  }
+                  return msg;
+                }),
+              );
+            }
+          },
         );
       }
     } catch (err) {
