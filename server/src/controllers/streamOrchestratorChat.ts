@@ -64,6 +64,9 @@ Be conversational and helpful. If the user's question is about financial markets
 
     console.log(`${getCurrentTimestamp()} 🚀 - streamOrchestratorChat - Calling Heroku MIA at ${HEROKU_MIA_URL}`);
 
+    // Send initial status
+    res.write(`data: ${JSON.stringify({ type: "status", message: "Analyzing your question..." })}\n\n`);
+
     // Make request to Heroku MIA
     const response = await fetch(HEROKU_MIA_URL, {
       method: "POST",
@@ -162,6 +165,9 @@ Be conversational and helpful. If the user's question is about financial markets
                   `${getCurrentTimestamp()} 🔧 - streamOrchestratorChat - LLM requesting tool: ${currentToolCall.name}`,
                 );
 
+                // Send status: consulting agent
+                res.write(`data: ${JSON.stringify({ type: "status", message: "Consulting Agentforce agent..." })}\n\n`);
+
                 if (currentToolCall.name === "query_agentforce") {
                   const args = JSON.parse(currentToolCall.arguments);
                   const agentforceResponse = await queryAgentforce(args.query);
@@ -170,6 +176,9 @@ Be conversational and helpful. If the user's question is about financial markets
                   res.write(
                     `data: ${JSON.stringify({ type: "tool_result", tool: "agentforce", content: agentforceResponse })}\n\n`,
                   );
+
+                  // Send status: synthesizing
+                  res.write(`data: ${JSON.stringify({ type: "status", message: "Synthesizing response..." })}\n\n`);
 
                   console.log(
                     `${getCurrentTimestamp()} 🔄 - streamOrchestratorChat - Making follow-up request to MIA with tool result`,
