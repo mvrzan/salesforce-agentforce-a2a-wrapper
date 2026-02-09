@@ -20,7 +20,12 @@ export class AgentClientWrapper {
     return card as AgentCard;
   }
 
-  async sendMessage(message: string, onChunk?: (chunk: string) => void, contextId?: string): Promise<string> {
+  async sendMessage(
+    message: string,
+    onChunk?: (chunk: string) => void,
+    contextId?: string,
+    onStatus?: (state: string, message?: string) => void,
+  ): Promise<string> {
     if (!this.client) {
       throw new Error("Client not initialized. Call fetchAgentCard first.");
     }
@@ -36,6 +41,7 @@ export class AgentClientWrapper {
     // Use sendMessageStream to receive the response
     const stream = this.client.sendMessageStream({ message: userMessage });
     let fullResponse = "";
+    let firstChunkReceived = false;
 
     for await (const event of stream) {
       console.log("📥 Received event:", event.kind);
@@ -65,12 +71,26 @@ export class AgentClientWrapper {
           }
         }
       } else if (event.kind === "artifact-update") {
-        // Streaming artifact chunks - call callback for real-time display
-        if (event.artifact?.parts) {
+        // Check if this is a status artifact (special artifact ID)
+        if (event.artifact?.artifactId === "__status__" && event.artifact?.parts) {
+          // This is a status update, not content
+          for (const part of event.artifact.parts) {
+            if (part.kind === "text" && "text" in part && onStatus) {
+              console.log("📊 Detailed status:", part.text);
+              onStatus("working", part.text);
+            }
+          }
+        } else if (event.artifact?.parts) {
+          // Regular content artifact - streaming chunks
           for (const part of event.artifact.parts) {
             if (part.kind === "text" && "text" in part) {
               const chunkText = part.text;
               console.log("📤 Chunk received:", chunkText);
+
+              // Mark that we've started receiving content
+              if (!firstChunkReceived) {
+                firstChunkReceived = true;
+              }
 
               // Accumulate full response
               if (event.append) {
@@ -88,6 +108,22 @@ export class AgentClientWrapper {
         }
       } else if (event.kind === "status-update") {
         console.log("📊 Task status:", event.status?.state);
+
+        // Call status callback with state
+        if (onStatus && event.status) {
+          // Generate friendly message based on state (fallback if no detailed status sent)
+          let friendlyMessage: string | undefined;
+          if (event.status.state === "submitted") {
+            friendlyMessage = "Request submitted...";
+          } else if (event.status.state === "working") {
+            friendlyMessage = "Processing request...";
+          } else if (event.status.state === "completed") {
+            friendlyMessage = "Response completed successfully";
+          } else if (event.status.state === "failed") {
+            friendlyMessage = "Request failed";
+          }
+          onStatus(event.status.state, friendlyMessage);
+        }
       }
     }
 
