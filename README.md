@@ -19,7 +19,8 @@ Connect Salesforce Agentforce to the world through the Agent-to-Agent (A2A) Prot
   - [Demo](#demo)
     - [Orchestrator Mode](#orchestrator-mode)
     - [Direct A2A Mode](#direct-a2a-mode)
-    - [Architecture Diagram](#architecture-diagram)
+    - [Architecture Diagram - Direct Mode](#architecture-diagram---direct-mode)
+    - [Architecture Diagram - Orchestrator Mode](#architecture-diagram---orchestrator-mode)
   - [API Specification](#api-specification)
     - [A2A Protocol Endpoints](#a2a-protocol-endpoints)
     - [Orchestrator Endpoint](#orchestrator-endpoint)
@@ -126,9 +127,11 @@ _Screenshot showing Heroku MIA deciding when to call Agentforce_
 
 _Screenshot showing direct A2A client-to-agent communication_
 
-### Architecture Diagram
+### Architecture Diagram - Direct Mode
 
-_Diagram showing both orchestrator and direct mode architectures_
+![](./screenshots/architecture-diagram-direct-mode.png)
+
+### Architecture Diagram - Orchestrator Mode
 
 ---
 
