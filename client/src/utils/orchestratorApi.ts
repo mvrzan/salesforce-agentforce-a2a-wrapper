@@ -63,7 +63,6 @@ export async function sendMessageToOrchestrator(
       for (const line of lines) {
         if (line.startsWith("data: ")) {
           const data = line.slice(6);
-          console.log("📥 Received data:", data.substring(0, 100));
 
           if (data === "[DONE]") {
             continue;
@@ -71,13 +70,10 @@ export async function sendMessageToOrchestrator(
 
           try {
             const event = JSON.parse(data) as OrchestratorStreamEvent;
-            console.log("📨 Parsed event:", event.type, event.content?.substring(0, 50));
 
             if (event.type === "content" && event.content) {
-              console.log("✍️ Calling onChunk with:", event.content);
               onChunk(event.content);
             } else if (event.type === "status" && onStatus && event.message) {
-              console.log("📊 Status update:", event.message);
               onStatus(event.message);
             } else if (event.type === "tool_result" && onToolCall && event.content) {
               console.log(`🔧 Tool called: ${event.tool}, result length: ${event.content.length}`);
