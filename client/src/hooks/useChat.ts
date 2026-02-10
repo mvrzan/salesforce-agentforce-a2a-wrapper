@@ -52,7 +52,6 @@ export function useChat({ client, useOrchestrator }: UseChatProps) {
         await sendMessageToOrchestrator(
           orchestratorMessages,
           (chunk: string) => {
-            console.log(`📝 Received chunk in useChat: "${chunk}"`);
             // Update the placeholder message with each chunk
             setMessages((prev) =>
               prev.map((msg) => {
