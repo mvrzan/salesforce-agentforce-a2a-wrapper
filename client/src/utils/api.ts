@@ -43,88 +43,76 @@ export class AgentClientWrapper {
     let fullResponse = "";
     let firstChunkReceived = false;
 
-    for await (const event of stream) {
-      console.log("📥 Received event:", event.kind);
-
-      // Handle different event types according to A2A spec
-      if (event.kind === "message") {
-        // Complete message response (Message-only stream pattern)
-        if (event.parts && event.parts.length > 0) {
-          const textPart = event.parts.find((part) => part.kind === "text");
-          if (textPart && "text" in textPart) {
-            fullResponse = textPart.text;
-            console.log("💬 Complete message received");
-          }
-        }
-      } else if (event.kind === "task") {
-        // Task with artifacts
-        console.log("📋 Task:", event.status?.state);
-        if (event.artifacts && event.artifacts.length > 0) {
-          for (const artifact of event.artifacts) {
-            if (artifact.parts) {
-              for (const part of artifact.parts) {
-                if (part.kind === "text" && "text" in part) {
-                  fullResponse += part.text;
+    try {
+      for await (const event of stream) {
+        // Handle different event types according to A2A spec
+        if (event.kind === "task") {
+          // Task with artifacts
+          if (event.artifacts && event.artifacts.length > 0) {
+            for (const artifact of event.artifacts) {
+              if (artifact.parts) {
+                for (const part of artifact.parts) {
+                  if (part.kind === "text" && "text" in part) {
+                    fullResponse += part.text;
+                  }
                 }
               }
             }
           }
-        }
-      } else if (event.kind === "artifact-update") {
-        // Check if this is a status artifact (special artifact ID)
-        if (event.artifact?.artifactId === "__status__" && event.artifact?.parts) {
-          // This is a status update, not content
-          for (const part of event.artifact.parts) {
-            if (part.kind === "text" && "text" in part && onStatus) {
-              console.log("📊 Detailed status:", part.text);
-              onStatus("working", part.text);
-            }
-          }
-        } else if (event.artifact?.parts) {
-          // Regular content artifact - streaming chunks
-          for (const part of event.artifact.parts) {
-            if (part.kind === "text" && "text" in part) {
-              const chunkText = part.text;
-              console.log("📤 Chunk received:", chunkText);
-
-              // Mark that we've started receiving content
-              if (!firstChunkReceived) {
-                firstChunkReceived = true;
+        } else if (event.kind === "artifact-update") {
+          // Check if this is a status artifact (special artifact ID)
+          if (event.artifact?.artifactId === "__status__" && event.artifact?.parts) {
+            // This is a status update, not content
+            for (const part of event.artifact.parts) {
+              if (part.kind === "text" && "text" in part && onStatus) {
+                onStatus("working", part.text);
               }
+            }
+          } else if (event.artifact?.parts) {
+            // Regular content artifact - streaming chunks
+            for (const part of event.artifact.parts) {
+              if (part.kind === "text" && "text" in part) {
+                const chunkText = part.text;
 
-              // Accumulate full response
-              if (event.append) {
+                // Mark that we've started receiving content
+                if (!firstChunkReceived) {
+                  firstChunkReceived = true;
+                }
+
+                // Accumulate full response (content always appends in our implementation)
                 fullResponse += chunkText;
-              } else {
-                fullResponse = chunkText;
-              }
 
-              // Call chunk callback for real-time display
-              if (onChunk) {
-                onChunk(chunkText);
+                // Call chunk callback for real-time display
+                if (onChunk) {
+                  onChunk(chunkText);
+                }
               }
             }
           }
-        }
-      } else if (event.kind === "status-update") {
-        console.log("📊 Task status:", event.status?.state);
-
-        // Call status callback with state
-        if (onStatus && event.status) {
-          // Generate friendly message based on state (fallback if no detailed status sent)
-          let friendlyMessage: string | undefined;
-          if (event.status.state === "submitted") {
-            friendlyMessage = "Request submitted...";
-          } else if (event.status.state === "working") {
-            friendlyMessage = "Processing request...";
-          } else if (event.status.state === "completed") {
-            friendlyMessage = "Response completed successfully";
-          } else if (event.status.state === "failed") {
-            friendlyMessage = "Request failed";
+        } else if (event.kind === "status-update") {
+          // Call status callback with state
+          if (onStatus && event.status) {
+            // Generate friendly message based on state (fallback if no detailed status sent)
+            let friendlyMessage: string | undefined;
+            if (event.status.state === "submitted") {
+              friendlyMessage = "Request submitted...";
+            } else if (event.status.state === "working") {
+              friendlyMessage = "Processing request...";
+            } else if (event.status.state === "completed") {
+              friendlyMessage = "Response completed successfully";
+            } else if (event.status.state === "failed") {
+              friendlyMessage = "Request failed";
+            }
+            onStatus(event.status.state, friendlyMessage);
           }
-          onStatus(event.status.state, friendlyMessage);
         }
       }
+    } catch (error) {
+      console.error("Stream error:", error);
+      if (onStatus) {
+        onStatus("failed", "Connection lost - stream interrupted");
+      }
+      throw new Error(`Stream interrupted: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
 
     return fullResponse || "No response from agent";
