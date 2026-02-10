@@ -236,7 +236,7 @@ To run this application locally, you will need the following:
    INFERENCE_KEY=your_heroku_inference_api_key
    INFERENCE_MODEL_ID=your_selected_llm_model
 
-   # API Security
+   # API Security, example: 81144c5228d0
    API_SECRET=your_generated_secret_key
 
    # Server Configuration
