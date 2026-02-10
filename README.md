@@ -29,6 +29,11 @@ Connect Salesforce Agentforce to the world through the Agent-to-Agent (A2A) Prot
   - [Setup](#setup)
     - [Local Environment Configuration](#local-environment-configuration)
   - [Salesforce configuration](#salesforce-configuration)
+    - [Agent creation](#agent-creation)
+    - [Agent Data Library](#agent-data-library)
+    - [Heroku AppLink with Agentforce](#heroku-applink-with-agentforce)
+    - [Topics](#topics)
+    - [Heroku AppLink with JWT](#heroku-applink-with-jwt)
   - [Deployment](#deployment)
     - [Heroku Deployment](#heroku-deployment)
 - [License](#license)
@@ -293,7 +298,115 @@ To run this application locally, you will need the following:
 
 ## Salesforce configuration
 
-TODO: In progress...
+### Agent creation
+
+First step is to create an Agentforce Agent by following official [instructions](https://help.salesforce.com/s/articleView?id=ai.agent_parent_setup.htm&type=5).
+
+### Agent Data Library
+
+Ensure you have the [Agent Data Library](https://help.salesforce.com/s/articleView?id=ai.data_library_create.htm&type=5) configured with the latest Salesforce earnings report.
+
+### Heroku AppLink with Agentforce
+
+Once your Agent is successfully configured, it is time to set up the [Heroku AppLink](https://devcenter.heroku.com/articles/getting-started-heroku-applink-agentforce) connection.
+
+### Topics
+
+The agent needs the following Topics:
+
+Classification Description:
+
+```
+Fetch and provide formatted information from various earnings reports using the Agenforce Data Library.
+```
+
+Scope:
+
+```
+My job is only to retrieve relevant information from the Agenforce Data Library based on user queries about earnings reports and provide the information in a formatted manner. I will not handle unrelated queries or perform tasks outside of fetching and formatting earnings report data.
+```
+
+Instruction 1:
+
+```
+Use the Agenforce Data Library to search for relevant earnings report data based on the user's query.
+```
+
+Instruction 2:
+
+```
+Ensure the information retrieved is accurate and corresponds to the user's request.
+```
+
+Instruction 3:
+
+```
+Format the retrieved data clearly and concisely before presenting it to the user.
+```
+
+Instruction 4:
+
+```
+If the requested information is unavailable, inform the user and provide alternative options if applicable.
+```
+
+Instruction 5:
+
+```
+Ask clarifying questions to better understand the user's specific needs regarding the earnings reports.
+```
+
+Action:
+Use Answer Questions with Knowledge and select your Agentforce Data Library.
+
+---
+
+Classification Description:
+
+```
+Handles requests to retrieve stock prices and company information based on a provided stock symbol.
+```
+
+Scope:
+
+```
+Your job is only to retrieve either the stock price or company information based on the stock symbol provided by the user, using external APIs.
+```
+
+Instruction 1:
+
+```
+Use the Agenforce Data Library to search for relevant earnings report data based on the user's query.
+```
+
+Instruction 2:
+
+```
+If a user provides a stock symbol, call the external API to retrieve the stock price.
+```
+
+Instruction 3:
+
+```
+Ask the user for clarification if the request is ambiguous or if the stock symbol is missing.
+```
+
+Instruction 4:
+
+```
+Provide the retrieved information clearly and concisely to the user.
+```
+
+Action 1:
+Select the Get_Stock_Price action from your Heroku AppLink connection.
+
+Action 2: Select the Get_Company_Profile action from your Heroku AppLink connection.
+
+Once you are done, make sure to Publish your Agent.
+
+### Heroku AppLink with JWT
+
+In order to allow Agentforce API invocation from the Heroku server, ensure [Heroku AppLink integration with JWT](https://devcenter.heroku.com/articles/jwt-heroku-applink) is configured.
 
 ## Deployment
 
