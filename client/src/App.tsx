@@ -1,160 +1,33 @@
-import { useState } from "react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import AgentDiscovery from "./components/AgentDiscovery";
 import AgentCardDisplay from "./components/AgentCardDisplay";
 import ChatInterface from "./components/ChatInterface";
 import ArchitectureDiagram from "./components/ArchitectureDiagram";
-import { AgentClientWrapper } from "./utils/api";
-import { sendMessageToOrchestrator } from "./utils/orchestratorApi";
-import type { AgentCard, Message } from "./types/agent";
+import { useAgentDiscovery } from "./hooks/useAgentDiscovery";
+import { useChat } from "./hooks/useChat";
+import { useChatMode } from "./hooks/useChatMode";
 
 function App() {
-  const [agentCard, setAgentCard] = useState<AgentCard | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isDiscovering, setIsDiscovering] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [error, setError] = useState<string>("");
-  const [client, setClient] = useState<AgentClientWrapper | null>(null);
-  const [contextId] = useState<string>(crypto.randomUUID());
-  const [useOrchestrator, setUseOrchestrator] = useState(true);
+  const { agentCard, client, isDiscovering, error: discoveryError, discoverAgent, resetAgent } = useAgentDiscovery();
+  const { useOrchestrator, toggleMode } = useChatMode(true);
+  const { messages, isSending, error: chatError, sendMessage, clearMessages } = useChat({ client, useOrchestrator });
+
+  const error = discoveryError || chatError;
 
   const handleAgentDiscovered = async (url: string) => {
-    setIsDiscovering(true);
-    setError("");
-
-    try {
-      const newClient = new AgentClientWrapper(url);
-      const card = await newClient.fetchAgentCard();
-
-      setClient(newClient);
-      setAgentCard(card);
-      setMessages([]);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to discover agent";
-      setError(errorMessage);
-      console.error("Discovery error:", err);
-    } finally {
-      setIsDiscovering(false);
-    }
+    await discoverAgent(url);
+    clearMessages();
   };
 
-  const handleSendMessage = async (text: string) => {
-    if (!agentCard) return;
+  const handleModeSwitch = () => {
+    toggleMode();
+    clearMessages();
+  };
 
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      role: "user",
-      text,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setIsSending(true);
-    setError("");
-
-    // Create placeholder message for streaming chunks
-    const placeholderMessageId = crypto.randomUUID();
-    const placeholderMessage: Message = {
-      id: placeholderMessageId,
-      role: "agent",
-      text: "",
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, placeholderMessage]);
-
-    try {
-      if (useOrchestrator) {
-        // Use Heroku MIA orchestrator
-        const orchestratorMessages = messages
-          .filter((m) => m.role === "user" || m.role === "agent")
-          .map((m) => ({ role: m.role === "agent" ? ("assistant" as const) : ("user" as const), content: m.text }));
-
-        orchestratorMessages.push({ role: "user", content: text });
-
-        await sendMessageToOrchestrator(
-          orchestratorMessages,
-          (chunk: string) => {
-            console.log(`📝 Received chunk in App.tsx: "${chunk}"`);
-            // Update the placeholder message with each chunk
-            setMessages((prev) =>
-              prev.map((msg) => {
-                if (msg.id === placeholderMessageId) {
-                  // If text ends with "..." it's a status message - replace it
-                  // Otherwise append the chunk
-                  const isStatusMessage = msg.text.endsWith("...");
-                  return { ...msg, text: isStatusMessage ? chunk : msg.text + chunk };
-                }
-                return msg;
-              }),
-            );
-          },
-          (tool: string, result: string) => {
-            console.log(`🔧 ${tool} returned: ${result.substring(0, 100)}...`);
-          },
-          (message: string) => {
-            console.log(`📊 Status update: ${message}`);
-            // Update placeholder message with status (only if still showing status, not actual content)
-            setMessages((prev) =>
-              prev.map((msg) => {
-                // Only update if message is empty or ends with "..." (status message)
-                if (msg.id === placeholderMessageId && (msg.text === "" || msg.text.endsWith("..."))) {
-                  return { ...msg, text: message };
-                }
-                return msg;
-              }),
-            );
-          },
-        );
-      } else {
-        // Direct A2A call to Agentforce
-        if (!client) return;
-
-        await client.sendMessage(
-          text,
-          (chunk: string) => {
-            // Update the placeholder message with each chunk
-            setMessages((prev) =>
-              prev.map((msg) => {
-                if (msg.id === placeholderMessageId) {
-                  // If text ends with "..." it's a status message - replace it
-                  // Otherwise append the chunk
-                  const isStatusMessage = msg.text.endsWith("...");
-                  return { ...msg, text: isStatusMessage ? chunk : msg.text + chunk };
-                }
-                return msg;
-              }),
-            );
-          },
-          contextId,
-          (_state: string, message?: string) => {
-            // Update placeholder message with status (only if still showing status, not actual content)
-            if (message) {
-              setMessages((prev) =>
-                prev.map((msg) => {
-                  // Only update if message is empty or ends with "..." (status message)
-                  if (msg.id === placeholderMessageId && (msg.text === "" || msg.text.endsWith("..."))) {
-                    return { ...msg, text: message };
-                  }
-                  return msg;
-                }),
-              );
-            }
-          },
-        );
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to send message";
-      setError(errorMessage);
-      console.error("Send message error:", err);
-
-      // Replace placeholder with error message
-      setMessages((prev) =>
-        prev.map((msg) => (msg.id === placeholderMessageId ? { ...msg, text: `Error: ${errorMessage}` } : msg)),
-      );
-    } finally {
-      setIsSending(false);
-    }
+  const handleReset = () => {
+    resetAgent();
+    clearMessages();
   };
 
   return (
@@ -188,10 +61,7 @@ function App() {
                     </p>
                   </div>
                   <button
-                    onClick={() => {
-                      setUseOrchestrator(!useOrchestrator);
-                      setMessages([]);
-                    }}
+                    onClick={handleModeSwitch}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition font-medium"
                   >
                     Switch to {useOrchestrator ? "Direct Mode" : "Orchestrator Mode"}
@@ -215,7 +85,7 @@ function App() {
               {/* Chat Interface Section */}
               <ChatInterface
                 agentCard={agentCard}
-                onSendMessage={handleSendMessage}
+                onSendMessage={sendMessage}
                 messages={messages}
                 isLoading={isSending}
                 useOrchestrator={useOrchestrator}
@@ -224,12 +94,7 @@ function App() {
               {/* Reset Button */}
               <div className="text-center">
                 <button
-                  onClick={() => {
-                    setAgentCard(null);
-                    setMessages([]);
-                    setClient(null);
-                    setError("");
-                  }}
+                  onClick={handleReset}
                   className="text-gray-600 hover:text-gray-900 text-sm font-medium transition"
                 >
                   🔄 Discover Different Agent
