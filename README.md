@@ -8,6 +8,8 @@
 
 Connect Salesforce Agentforce to the world through the Agent-to-Agent (A2A) Protocol with intelligent orchestration powered by Heroku Managed Inference and Agents.
 
+> **Note:** This is a custom A2A protocol implementation that wraps Agentforce agents. Salesforce's native A2A support is currently in pilot and not used in this project.
+
 ---
 
 # Table of Contents
