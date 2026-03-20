@@ -140,7 +140,7 @@ export class FinancialAgentExecutor implements AgentExecutor {
             method: "DELETE",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${auth.accessToken}`,
+              Authorization: `Bearer ${(auth as unknown as { accessToken: string }).accessToken}`,
               "x-session-end-reason": "Error",
             },
           });
@@ -204,7 +204,7 @@ export class FinancialAgentExecutor implements AgentExecutor {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${auth.accessToken}`,
+          Authorization: `Bearer ${(auth as unknown as { accessToken: string }).accessToken}`,
           "x-session-end-reason": "Expired",
         },
       });
@@ -229,7 +229,7 @@ export class FinancialAgentExecutor implements AgentExecutor {
       }
 
       return {
-        accessToken: auth.accessToken,
+        accessToken: (auth as unknown as { accessToken: string }).accessToken,
         instanceUrl: auth.domainUrl,
         agentId,
       };
