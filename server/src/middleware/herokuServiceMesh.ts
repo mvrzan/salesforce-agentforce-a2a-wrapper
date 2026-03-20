@@ -2,6 +2,16 @@ import { getCurrentTimestamp } from "../utils/loggingUtil.ts";
 import salesforceSdk from "@heroku/applink";
 import { type Request, type Response, type NextFunction } from "express";
 
+type SdkInstance = ReturnType<typeof salesforceSdk.init> & { asyncComplete?: boolean };
+
+type SdkRequest = Request & {
+  sdk: SdkInstance;
+  log?: unknown;
+  route: NonNullable<Request["route"]> & {
+    salesforceConfig?: { parseRequest?: boolean };
+  };
+};
+
 type AsyncHandler = (req: Request, res: Response) => Promise<void>;
 const customAsyncHandlers: Record<string, AsyncHandler> = {};
 
@@ -9,20 +19,21 @@ const initSalesforceSdk = async () => {
   console.log(`${getCurrentTimestamp()} 🏋  - herokuServiceMesh - Loading up the middleware...`);
 
   const salesforceMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-    req.sdk = salesforceSdk.init();
+    const sdkReq = req as SdkRequest;
+    sdkReq.sdk = salesforceSdk.init();
 
     const skipParsing = req.route?.salesforceConfig?.parseRequest === false;
 
     if (!skipParsing) {
       try {
-        const parsedRequest = req.sdk.salesforce.parseRequest(req.headers, req.body, req.log || console);
+        const parsedRequest = sdkReq.sdk.salesforce.parseRequest(req.headers, req.body, sdkReq.log ?? console);
 
-        req.sdk = Object.assign(req.sdk, parsedRequest);
+        sdkReq.sdk = Object.assign(sdkReq.sdk, parsedRequest);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(
           `${getCurrentTimestamp()} ❌ - herokuServiceMesh  Salesforce authentication error:`,
-          errorMessage
+          errorMessage,
         );
 
         return res.status(401).json({
@@ -54,12 +65,12 @@ const initSalesforceSdk = async () => {
 
       try {
         await handler(req, res);
-        req.sdk.asyncComplete = true;
+        (req as SdkRequest).sdk.asyncComplete = true;
         console.log(`${getCurrentTimestamp()} 🔄 Async ${routeKey} completed!`);
       } catch (error) {
         console.error(
           `${getCurrentTimestamp()} ❌ - herokuServiceMesh  Error in async handler for ${routeKey}:`,
-          error
+          error,
         );
       }
       next();
