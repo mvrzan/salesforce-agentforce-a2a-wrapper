@@ -24,6 +24,10 @@ declare module "@heroku/applink" {
     [key: string]: any;
   }
 
+  interface Org {
+    readonly accessToken: string;
+  }
+
   const Applink: ApplinkConstructor;
 
   export default Applink;
